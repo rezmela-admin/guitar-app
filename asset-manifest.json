@@ -1,16 +1,13 @@
 {
   "files": {
     "main.css": "/guitar-app/static/css/main.f855e6bc.css",
-    "main.js": "/guitar-app/static/js/main.45b82550.js",
-    "static/js/453.c225f8e1.chunk.js": "/guitar-app/static/js/453.c225f8e1.chunk.js",
-    "static/media/logo.svg": "/guitar-app/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "main.js": "/guitar-app/static/js/main.dcf7499c.js",
     "index.html": "/guitar-app/index.html",
     "main.f855e6bc.css.map": "/guitar-app/static/css/main.f855e6bc.css.map",
-    "main.45b82550.js.map": "/guitar-app/static/js/main.45b82550.js.map",
-    "453.c225f8e1.chunk.js.map": "/guitar-app/static/js/453.c225f8e1.chunk.js.map"
+    "main.dcf7499c.js.map": "/guitar-app/static/js/main.dcf7499c.js.map"
   },
   "entrypoints": [
     "static/css/main.f855e6bc.css",
-    "static/js/main.45b82550.js"
+    "static/js/main.dcf7499c.js"
   ]
 }
