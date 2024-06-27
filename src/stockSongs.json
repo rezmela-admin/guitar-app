@@ -1,0 +1,32 @@
+{
+  "songs": [
+    {
+      "title": "Jazzy Blues",
+      "chordSequence": "C7(4), F7(4), C7(4), G7(2), F7(2), C7(4)"
+    },
+    {
+      "title": "Folk Ballad",
+      "chordSequence": "G(4), Em(4), Cmaj7(4), D7(4)"
+    },
+    {
+      "title": "Rock Anthem",
+      "chordSequence": "Em(2), G(2), Dsus4(2), A7(2), Cadd9(4), G(4)"
+    },
+    {
+      "title": "Smooth Jazz",
+      "chordSequence": "Dmaj7(4), Gm7(4), Cm7(4), F7(4)"
+    },
+    {
+      "title": "Country Road",
+      "chordSequence": "D(4), A(2), G(2), D(4), Bm(2), G(2)"
+    },
+    {
+      "title": "Bossa Nova Rhythm",
+      "chordSequence": "Am7(4), D7(4), Gmaj7(4), Cm7(2), F7(2)"
+    },
+    {
+      "title": "Progressive Rock",
+      "chordSequence": "Verse:\nEm7(4), A7sus4(4), Dmaj7(4), Gmaj7(4)\nChorus:\nCadd9(4), G6(4), Am7(4), Dsus2(4)"
+    }
+  ]
+}
