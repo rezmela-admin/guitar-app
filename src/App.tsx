@@ -1,12 +1,12 @@
 import React from 'react';
-import GuitarChordDiagram from './GuitarChordDiagram';
+import GuitarChordApp from './GuitarChordApp';
 import './App.css';
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <h1>Guitar Chord Diagram</h1>
-      <GuitarChordDiagram />
+      <h1>Effortlessly Master Essential Guitar Chords</h1>
+      <GuitarChordApp />
     </div>
   );
 };
