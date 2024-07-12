@@ -106,7 +106,8 @@ export const useAudioSamples = () => {
 		gainNode.gain.setTargetAtTime(volume * sustainLevel, currentTime + attackTime, decayTime / 3);
 		
 		// Release (using setTargetAtTime for smoother fade-out)
-		const releaseStart = currentTime + (duration / 1000) - releaseTime;
+		const noteDuration = Math.max(duration / 1000, releaseTime);
+		const releaseStart = currentTime + noteDuration - releaseTime;
 		gainNode.gain.setTargetAtTime(initialGain, releaseStart, releaseTime / 3);
 		
 		source.connect(gainNode);
@@ -117,13 +118,13 @@ export const useAudioSamples = () => {
 		source.playbackRate.setValueAtTime(playbackRate, currentTime);
 		
 		source.start(currentTime);
-		source.stop(currentTime + (duration / 1000) + releaseTime);
+		source.stop(currentTime + noteDuration);
 		
-		console.log(`Scheduled note to stop after ${duration + releaseTime * 1000}ms`);
+		console.log(`Scheduled note to stop after ${noteDuration * 1000}ms`);
 	  } else {
 		console.warn(`No sample found for note: ${noteName} (MIDI: ${midiNote})`);
 	  }
-	}, []);	
+	}, []);
 
   useEffect(() => {
     return () => {
