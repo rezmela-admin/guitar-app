@@ -1,74 +1,98 @@
 import React, { useState } from 'react';
-import { KEYS } from './types';
+import { KEYS, Note, NOTE_SEQUENCE } from './types';
 import stockSongs from './stockSongs.json';
+import { chordProgressions } from './sequenceFormulas';
 
 type LibraryGeneratorProps = {
   setChordSequence: (sequence: string) => void;
 };
+
+const keyMaps: Record<string, string[]> = {
+  'C Major': ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim', 'Bb', 'Ab'],
+  'G Major': ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim', 'F', 'Eb'],
+  'D Major': ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim', 'C', 'Bb'],
+  'A Major': ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim', 'G', 'F'],
+  'E Major': ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim', 'D', 'C'],
+  'F Major': ['F', 'Gm', 'Am', 'Bb', 'C', 'Dm', 'Edim', 'Eb', 'Db'],
+  'A Minor': ['Am', 'Bdim', 'C', 'Dm', 'Em', 'F', 'G', 'G', 'F'],
+  'E Minor': ['Em', 'F#dim', 'G', 'Am', 'Bm', 'C', 'D', 'D', 'C'],
+  'B Minor': ['Bm', 'C#dim', 'D', 'Em', 'F#m', 'G', 'A', 'A', 'G'],
+  'F# Minor': ['F#m', 'G#dim', 'A', 'Bm', 'C#m', 'D', 'E', 'E', 'D'],
+  'C# Minor': ['C#m', 'D#dim', 'E', 'F#m', 'G#m', 'A', 'B', 'B', 'A'],
+  'D Minor': ['Dm', 'Edim', 'F', 'Gm', 'Am', 'Bb', 'C', 'C', 'Bb']
+};
+
+const getStrumCount = (numeral: string, index: number, totalChords: number): number => {
+  if (index === 0 || index === totalChords - 1) return 4;
+  if (['i', 'iv', 'v'].includes(numeral.toLowerCase())) return 4;
+  return 2;
+};
+
+export function generateChordSequence(key: string, progression: string): string {
+  // Find the selected progression
+  const selectedProgression = chordProgressions.find(prog => prog.value === progression);
+  if (!selectedProgression) {
+    throw new Error('Invalid progression selected');
+  }
+
+  // Check if the key is valid
+  if (!KEYS.includes(key)) {
+    throw new Error('Invalid key selected');
+  }
+
+  // Get the progression steps
+  const progressionSteps = selectedProgression.value.split('-');
+
+  // Get the chords for the selected key
+  const chords = keyMaps[key];
+  const isMinorKey = key.includes('Minor');
+
+  // Function to get the chord index based on the step
+  const getChordIndex = (step: string): number => {
+    const lowercaseStep = step.toLowerCase();
+    switch (lowercaseStep) {
+      case 'i': return 0;
+      case 'ii': return 1;
+      case 'iii': return 2;
+      case 'iv': return 3;
+      case 'v': return 4;
+      case 'vi': return 5;
+      case 'vii': return 6;
+      case 'bvii': return 7;
+      case 'bvi': return 8;
+      default: throw new Error(`Unsupported chord step: ${step}`);
+    }
+  };
+
+  // Generate the chord sequence
+  const chordSequence = progressionSteps.map(step => {
+    const index = getChordIndex(step);
+    let chord = chords[index];
+
+    // If the step is lowercase (except 'i' in minor keys) and the chord doesn't already end with 'm' or 'dim',
+    // add 'm' to make it minor
+    if (step === step.toLowerCase() && !(isMinorKey && step === 'i') && !chord.endsWith('m') && !chord.endsWith('dim')) {
+      chord += 'm';
+    }
+
+    return `${chord}(4)`;
+  });
+
+  // Join the chords into a single string
+  return chordSequence.join(' ');
+}
 
 const LibraryGenerator: React.FC<LibraryGeneratorProps> = ({ setChordSequence }) => {
   const [selectedKey, setSelectedKey] = useState('C Major');
   const [selectedProgression, setSelectedProgression] = useState('I-V-vi-IV');
   const [selectedSong, setSelectedSong] = useState('');
 
-  const getStrumCount = (numeral: string, index: number, totalChords: number): number => {
-    if (index === 0 || index === totalChords - 1) return 4;
-    if (['i', 'iv', 'v'].includes(numeral.toLowerCase())) return 4;
-    return 2;
-  };
-
   const handleGenerate = () => {
-    const keyMaps: Record<string, string[]> = {
-      'C Major': ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'],
-      'G Major': ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim'],
-      'D Major': ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim'],
-      'A Major': ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim'],
-      'E Major': ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim'],
-      'F Major': ['F', 'Gm', 'Am', 'Bb', 'C', 'Dm', 'Edim'],
-      'A Minor': ['Am', 'Bdim', 'C', 'Dm', 'Em', 'F', 'G'],
-      'E Minor': ['Em', 'F#dim', 'G', 'Am', 'Bm', 'C', 'D'],
-      'B Minor': ['Bm', 'C#dim', 'D', 'Em', 'F#m', 'G', 'A'],
-      'F# Minor': ['F#m', 'G#dim', 'A', 'Bm', 'C#m', 'D', 'E'],
-      'C# Minor': ['C#m', 'D#dim', 'E', 'F#m', 'G#m', 'A', 'B'],
-      'D Minor': ['Dm', 'Edim', 'F', 'Gm', 'Am', 'Bb', 'C']
-    };
-
-    const isMinorKey = selectedKey.includes('Minor');
-    const numerals = selectedProgression.split('-');
-    const chords = numerals.map((numeral, index) => {
-      let chordIndex;
-      if (numeral.startsWith('b')) {
-        chordIndex = ['', 'bII', 'bIII', '', 'bV', 'bVI', 'bVII'].indexOf(numeral);
-      } else {
-        chordIndex = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii'].indexOf(numeral.toLowerCase());
-      }
-
-      if (chordIndex !== -1) {
-        let chord = keyMaps[selectedKey][chordIndex];
-        if (isMinorKey) {
-          if (numeral.toLowerCase() === 'iv' || numeral.toLowerCase() === 'v') {
-            if (chord.endsWith('m')) {
-              chord = chord.slice(0, -1);
-            }
-          } else if (numeral.toUpperCase() === numeral) {
-            if (chord.endsWith('m')) {
-              chord = chord.slice(0, -1);
-            }
-          }
-        } else {
-          if (numeral.toLowerCase() === numeral && !chord.endsWith('m') && !chord.endsWith('dim')) {
-            chord += 'm';
-          }
-        }
-        const strumCount = getStrumCount(numeral, index, numerals.length);
-        return `${chord}(${strumCount})`;
-      } else {
-        return numeral;
-      }
-    });
-
-    setChordSequence(chords.join(', '));
+    const generatedSequence = generateChordSequence(selectedKey, selectedProgression);
+    setChordSequence(generatedSequence);
   };
+
+
 
   return (
     <div className="library-generator">
@@ -77,18 +101,9 @@ const LibraryGenerator: React.FC<LibraryGeneratorProps> = ({ setChordSequence })
         {KEYS.map(key => <option key={key} value={key}>{key}</option>)}
       </select>
       <select value={selectedProgression} onChange={(e) => setSelectedProgression(e.target.value)}>
-        <option value="I-V-vi-IV">Pop (I-V-vi-IV)</option>
-        <option value="ii-V-I">Jazz (ii-V-I)</option>
-        <option value="I-IV-V">Blues (I-IV-V)</option>
-        <option value="I-vi-IV-V">50s Doo-Wop (I-vi-IV-V)</option>
-        <option value="vi-IV-I-V">Pop/Rock (vi-IV-I-V)</option>
-        <option value="I-V-vi-iii-IV-I-IV-V">Canon (I-V-vi-iii-IV-I-IV-V)</option>
-        <option value="I-IV-vi-V">Modern Pop (I-IV-vi-V)</option>
-        <option value="i-bVII-bVI-V">Minor Pop/Rock (i-bVII-bVI-V)</option>
-        <option value="I-bVII-IV">Rock (I-bVII-IV)</option>
-        <option value="I-V-IV">Country/Folk (I-V-IV)</option>
-        <option value="ii-I-V">Jazz Turnaround (ii-I-V)</option>
-        <option value="I-vi-ii-V">Jazz Standard (I-vi-ii-V)</option>
+        {chordProgressions.map((prog, index) => (
+          <option key={index} value={prog.value}>{prog.name}</option>
+        ))}
       </select>
       <button onClick={handleGenerate}>Generate Sequence</button>
 
