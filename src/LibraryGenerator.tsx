@@ -3,6 +3,7 @@ import { KEYS, Note, NOTE_SEQUENCE } from './types';
 import stockSongs from './stockSongs.json';
 import { chordProgressions } from './sequenceFormulas';
 
+
 type LibraryGeneratorProps = {
   setChordSequence: (sequence: string) => void;
 };

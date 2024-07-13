@@ -5,7 +5,7 @@ import './App.css';
 
 const Home: React.FC = () => (
   <div className="App">
-    <h1>Effortlessly Master Essential Guitar Chords</h1>
+    <h1>Practice Essential Guitar Chords</h1>
     <GuitarChordApp />
   </div>
 );

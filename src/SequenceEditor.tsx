@@ -3,6 +3,7 @@ import { KEYS } from './types';
 import stockSongs from './stockSongs.json';
 import { generateChordSequence } from './LibraryGenerator';
 import { chordProgressions } from './sequenceFormulas';
+import { introTexts } from './appIntroTexts';
 
 interface SequenceEditorProps {
   chordSequence: string;
@@ -118,6 +119,7 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
       />
       <div style={{ marginBottom: '20px' }}>
         <h4>Chord Sequence Generator</h4>
+		<p>{introTexts.stockSongs}</p>
         <select 
           value={selectedKey} 
           onChange={(e) => setSelectedKey(e.target.value)}
@@ -139,6 +141,7 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
       </div>
       <div>
         <h4>Stock Songs</h4>
+		<p>{introTexts.stockSongs}</p>
         <select 
           value={selectedSong}
           onChange={handleStockSongSelection}

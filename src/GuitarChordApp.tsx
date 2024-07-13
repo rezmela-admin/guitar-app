@@ -1,13 +1,11 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, noteToMidi, midiToNote } from './types';
 import ChordBrowser from './ChordBrowser';
-import CustomSequence from './CustomSequence';
-import LibraryGenerator from './LibraryGenerator';
-import EnvelopeControls from './EnvelopeControls';
 import { useAudioSamples } from './hooks/useAudioSamples';
 import { PlayIcon, PauseIcon, StepBackwardIcon, StepForwardIcon, RepeatIcon, StopIcon,SkipToStartIcon, SkipToEndIcon, MusicalSymbolIcon } from './IconComponents';
 import SequenceEditor from './SequenceEditor'; 
 import SoundControls from './SoundControls';
+import { introTexts } from './appIntroTexts';
 
 
 type ChordDataItem = {
@@ -56,37 +54,52 @@ const GuitarChordApp: React.FC = () => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [showFunction, setShowFunction] = useState(false);
-  const [volume, setVolume] = useState(1); // Initialize volume to 1 (full volume)
+  const [volume, setVolume] = useState(0.5); // Initialize volume to half max.
   const [activeTab, setActiveTab] = useState<'browser' | 'sequence' | 'sound'>('browser');
   // Existing state variables
-  const [rootNote, setRootNote] = useState<RootNote>('A');
+  const [rootNote, setRootNote] = useState<RootNote>('D');
   const [chordType, setChordType] = useState<ChordType>('major');
-  const [chordSequence, setChordSequence] = useState<string>('');
+  const [chordSequence, setChordSequence] = useState<string>("D(4) A(4) Bm(4) F#m(4) G(4) D(4) G(4) A(4)");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
 
   // Updated or new state variables
-  const [playStyle, setPlayStyle] = useState<'strum' | 'arpeggio'>('strum');
+  const [playStyle, setPlayStyle] = useState<'strum' | 'arpeggio'>('arpeggio');
   const [bassDampening, setBassDampening] = useState(0.7);
-  const [attackTime, setAttackTime] = useState(0.005);
-  const [decayTime, setDecayTime] = useState(0.2);
-  const [sustainLevel, setSustainLevel] = useState(0.9);
-  const [releaseTime, setReleaseTime] = useState(0.5);
+  const [attackTime, setAttackTime] = useState(0.028);
+  const [decayTime, setDecayTime] = useState(2.0);
+  const [sustainLevel, setSustainLevel] = useState(0.55);
+  const [releaseTime, setReleaseTime] = useState(5.0);
   const [isChordPlaying, setIsChordPlaying] = useState(false);
-  const [chordPlaySpeed, setChordPlaySpeed] = useState(50);
-  const [duration, setDuration] = useState(300);
+  const [chordPlaySpeed, setChordPlaySpeed] = useState(79);
+  const [duration, setDuration] = useState(495);
   
   const [isPaused, setIsPaused] = useState(false);
   const [remainingChords, setRemainingChords] = useState<[RootNote, ChordType, number][]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [shouldStopAtEnd, setShouldStopAtEnd] = useState(false);
   
     useEffect(() => {
     console.log("chordSequence updated in GuitarChordApp:", chordSequence);
   }, [chordSequence]);
+  
+	const toggleLoop = () => {
+	  setIsLooping(prevState => !prevState);
+	  if (isPlaying) {
+		stopSequence();
+		if (!isLooping) {
+		  // If we're turning looping on, start playing from the beginning
+		  setCurrentChordIndex(0);
+		  playSequence();
+		}
+	  }
+	};
 
 
+
+  
   const { isLoading, loadingProgress, playNote,  initializeAudio, isInitialized, errorMessage } = useAudioSamples();
   
 	   useEffect(() => {
@@ -213,9 +226,19 @@ const GuitarChordApp: React.FC = () => {
 	  getMidiNoteFromPosition
 	]);
 
+	  const handleChordChange = useCallback((newRoot: RootNote, newType: ChordType) => {
+		setRootNote(newRoot);
+		setChordType(newType);
+		playChord(newRoot, newType);
+	  }, [playChord, setRootNote, setChordType]);
 
 
 const playSequence = useCallback(() => {
+  if (!isLooping && isPaused) {
+    // If we're not looping and the sequence is paused, don't start playing
+    return;
+  }
+
   let chords: [RootNote, ChordType, number][];
   let startIndex: number;
   
@@ -234,7 +257,7 @@ const playSequence = useCallback(() => {
   
   const playNextChord = (index: number) => {
     if (index >= chords.length) {
-      if (isLooping) {
+      if (isLooping && !shouldStopAtEnd) {
         setCurrentChordIndex(0);
         setRemainingChords(chords);
         playNextChord(0);
@@ -245,6 +268,7 @@ const playSequence = useCallback(() => {
         setCurrentChordIndex(0);
         setRemainingChords([]);
         setElapsedTime(0);
+        setShouldStopAtEnd(false);  // Reset the flag
         const firstChord = chords[0];
         if (firstChord) {
           const [root, type] = firstChord;
@@ -303,6 +327,7 @@ const playSequence = useCallback(() => {
   parseChordSequence,
   setIsPlaying,
   isLooping,
+  shouldStopAtEnd,
   setRootNote,
   setChordType,
   setCurrentChordIndex,
@@ -320,6 +345,7 @@ const playSequence = useCallback(() => {
   elapsedTime,
   setRemainingChords,
   setElapsedTime,
+  setShouldStopAtEnd,
   timerRef,
   intervalRef,
   isPaused
@@ -340,10 +366,10 @@ const playSequence = useCallback(() => {
   
 const stopSequence = useCallback(() => {
   if (timerRef.current) {
-	clearTimeout(timerRef.current);
+    clearTimeout(timerRef.current);
   }
   if (intervalRef.current) {
-	clearInterval(intervalRef.current);
+    clearInterval(intervalRef.current);
   }
   setIsPlaying(false);
   setIsPaused(false);
@@ -351,14 +377,14 @@ const stopSequence = useCallback(() => {
   setRemainingChords([]);
   setElapsedTime(0);
 
-  // Add these lines to reset to the first chord
+  // Reset to the first chord
   const firstChord = parseChordSequence(chordSequence)[0];
   if (firstChord) {
-	const [root, type] = firstChord;
-	setRootNote(root);
-	setChordType(type);
+    const [root, type] = firstChord;
+    setRootNote(root);
+    setChordType(type);
   }
-}, [chordSequence, parseChordSequence]);
+}, [chordSequence, parseChordSequence, setRootNote, setChordType]);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -416,9 +442,6 @@ const handleSkipToEnd = () => {
   }
 };
   
-  const toggleLoop = () => {
-	  setIsLooping(prevState => !prevState);
-	};
 
   useEffect(() => {
     return () => {
@@ -674,7 +697,7 @@ const renderString = (index: number) => (
 
 	return (
 	  <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-		<h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Guitar Chord Visualizer</h2>
+		<h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Interactive Chord Explorer</h2>
 		
 		{/* Persistent section */}
 		<div style={{ marginBottom: '20px' }}>
@@ -689,6 +712,9 @@ const renderString = (index: number) => (
 			  Show Chord Function
 			</label>
 		  </div>
+		  <p style={{ textAlign: 'center', marginBottom: '20px', fontStyle: 'italic' }}>
+			Try our preloaded sequence or create your own in the Sequence Editor tab!
+		  </p>
 		  {renderCurrentInfo()}
 			  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
 				<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -791,38 +817,45 @@ const renderString = (index: number) => (
 				setRootNote={setRootNote}
 				chordType={chordType}
 				setChordType={setChordType}
+				playChord={handleChordChange}
 			  />
 			</div>
 		  )}
 		  
 		  {activeTab === 'sequence' && (
-			<SequenceEditor 
-			  chordSequence={chordSequence}
-			  setChordSequence={setChordSequence}
-			/>
+			  <div>
+				<p>{introTexts.chordSequenceGenerator}</p>
+				<SequenceEditor 
+				  chordSequence={chordSequence}
+				  setChordSequence={setChordSequence}
+				/>
+			   </div>
 		  )}
 
 		{activeTab === 'sound' && (
-		  <SoundControls
-			playStyle={playStyle}
-			setPlayStyle={setPlayStyle}
-			bassDampening={bassDampening}
-			setBassDampening={setBassDampening}
-			volume={volume}
-			setVolume={setVolume}
-			attackTime={attackTime}
-			setAttackTime={setAttackTime}
-			decayTime={decayTime}
-			setDecayTime={setDecayTime}
-			sustainLevel={sustainLevel}
-			setSustainLevel={setSustainLevel}
-			releaseTime={releaseTime}
-			setReleaseTime={setReleaseTime}
-			chordPlaySpeed={chordPlaySpeed}
-			setChordPlaySpeed={setChordPlaySpeed}
-			duration={duration}
-			setDuration={setDuration}
-		  />
+		  <div>
+			  <p>{introTexts.soundControls}</p>
+			  <SoundControls
+				playStyle={playStyle}
+				setPlayStyle={setPlayStyle}
+				bassDampening={bassDampening}
+				setBassDampening={setBassDampening}
+				volume={volume}
+				setVolume={setVolume}
+				attackTime={attackTime}
+				setAttackTime={setAttackTime}
+				decayTime={decayTime}
+				setDecayTime={setDecayTime}
+				sustainLevel={sustainLevel}
+				setSustainLevel={setSustainLevel}
+				releaseTime={releaseTime}
+				setReleaseTime={setReleaseTime}
+				chordPlaySpeed={chordPlaySpeed}
+				setChordPlaySpeed={setChordPlaySpeed}
+				duration={duration}
+				setDuration={setDuration}
+			  />
+		  </div>
 		)}
 		{!isInitialized && (
 		  <button onClick={initializeAudio}>Initialize Audio</button>
