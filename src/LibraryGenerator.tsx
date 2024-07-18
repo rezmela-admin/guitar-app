@@ -3,7 +3,6 @@ import { KEYS, Note, NOTE_SEQUENCE } from './types';
 import stockSongs from './stockSongs.json';
 import { chordProgressions } from './sequenceFormulas';
 
-
 type LibraryGeneratorProps = {
   setChordSequence: (sequence: string) => void;
 };
@@ -23,11 +22,7 @@ const keyMaps: Record<string, string[]> = {
   'D Minor': ['Dm', 'Edim', 'F', 'Gm', 'Am', 'Bb', 'C', 'C', 'Bb']
 };
 
-const getStrumCount = (numeral: string, index: number, totalChords: number): number => {
-  if (index === 0 || index === totalChords - 1) return 4;
-  if (['i', 'iv', 'v'].includes(numeral.toLowerCase())) return 4;
-  return 2;
-};
+const defaultStrumPattern = 'D D U D';
 
 export function generateChordSequence(key: string, progression: string): string {
   // Find the selected progression
@@ -76,7 +71,7 @@ export function generateChordSequence(key: string, progression: string): string 
       chord += 'm';
     }
 
-    return `${chord}(4)`;
+    return `${chord}(${defaultStrumPattern})`;
   });
 
   // Join the chords into a single string
@@ -92,8 +87,6 @@ const LibraryGenerator: React.FC<LibraryGeneratorProps> = ({ setChordSequence })
     const generatedSequence = generateChordSequence(selectedKey, selectedProgression);
     setChordSequence(generatedSequence);
   };
-
-
 
   return (
     <div className="library-generator">

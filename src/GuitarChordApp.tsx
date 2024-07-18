@@ -1,22 +1,14 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, noteToMidi, midiToNote } from './types';
+import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, noteToMidi, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types';
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
 import { PlayIcon, PauseIcon, StepBackwardIcon, StepForwardIcon, RepeatIcon, StopIcon,SkipToStartIcon, SkipToEndIcon, MusicalSymbolIcon } from './IconComponents';
 import SequenceEditor from './SequenceEditor'; 
 import SoundControls from './SoundControls';
 import { introTexts } from './appIntroTexts';
+import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 
 
-type ChordDataItem = {
-  stringNumber: number;
-  position: number;
-  note: string;
-  displayText: string;
-  isRootNote: boolean;
-  midiNote: number | null;
-  noteName: string;
-};
 
 interface SoundControlsProps {
   playStyle: 'strum' | 'arpeggio';
@@ -47,7 +39,10 @@ interface ChordBrowserProps {
   playChord: (root: RootNote, type: ChordType) => void;
 }
 
-
+interface AnimatingNote {
+  midiNote: number;
+  progress: number;
+}
 
 
 const GuitarChordApp: React.FC = () => {
@@ -59,7 +54,8 @@ const GuitarChordApp: React.FC = () => {
   // Existing state variables
   const [rootNote, setRootNote] = useState<RootNote>('D');
   const [chordType, setChordType] = useState<ChordType>('major');
-  const [chordSequence, setChordSequence] = useState<string>("D(4) A(4) Bm(4) F#m(4) G(4) D(4) G(4) A(4)");
+  const [chordSequence, setChordSequence] = useState<string>("D(D D U D), A(D D U D), Bm(D D U D), F#m(D D U D), G(D D U D), D(D D U D), G(D D U D), A(D D U D)");
+  const [isSequenceValid, setIsSequenceValid] = useState<boolean>(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
@@ -76,14 +72,23 @@ const GuitarChordApp: React.FC = () => {
   const [duration, setDuration] = useState(495);
   
   const [isPaused, setIsPaused] = useState(false);
-  const [remainingChords, setRemainingChords] = useState<[RootNote, ChordType, number][]>([]);
+  const [remainingChords, setRemainingChords] = useState<ChordWithStrum[]>([]);
   const [elapsedTime, setElapsedTime] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [shouldStopAtEnd, setShouldStopAtEnd] = useState(false);
+  const [chordData, setChordData] = useState<ChordDataItem[]>([]);
+  const [animations, setAnimations] = useState<JSX.Element[]>([]);
+  
+  
+    const getNote = useCallback((stringNote: Note, fret: number): Note => {
+		const startIndex = NOTE_SEQUENCE.indexOf(stringNote);
+		return NOTE_SEQUENCE[(startIndex + fret) % 12];
+	}, []);
+	
   
     useEffect(() => {
     console.log("chordSequence updated in GuitarChordApp:", chordSequence);
-  }, [chordSequence]);
+    }, [chordSequence]);
   
 	const toggleLoop = () => {
 	  setIsLooping(prevState => !prevState);
@@ -97,42 +102,123 @@ const GuitarChordApp: React.FC = () => {
 	  }
 	};
 
-
+  
+  const { 
+    isLoading, 
+    loadingProgress, 
+    playNote: playAudioNote, 
+    initializeAudio, 
+    isInitialized, 
+    errorMessage 
+  } = useAudioSamples();
 
   
-  const { isLoading, loadingProgress, playNote,  initializeAudio, isInitialized, errorMessage } = useAudioSamples();
+const playAudioNoteWithAnimation = useCallback((
+  midiNote: number, 
+  stringNumber: number,
+  position: number,
+  isUpstroke: boolean,
+  volume: number, 
+  duration: number
+) => {
+  console.log(`Attempting to play and animate note: ${midiNote}`);
+  playAudioNote(midiNote, volume, duration);
+  triggerNoteAnimation(midiNote, stringNumber, position, isUpstroke, setAnimations);
+}, [playAudioNote, triggerNoteAnimation, setAnimations]);
+
   
 	   useEffect(() => {
 	   initializeAudio();
 	   }, [initializeAudio]);
+	   
+  // Function to update chordData based on rootNote and chordType
+const updateChordData = useCallback((root: RootNote, type: ChordType) => {
+  const positions: ChordPosition = chordPositions[root][type];
+  const newChordData: ChordDataItem[] = positions.map((position, index) => {
+    const stringNumber = 6 - index; // Convert index to string number (6 to 1)
+    const midiNote = position >= 0 ? getMidiNoteFromPosition(stringNumber.toString(), position) : null;
+    return {
+      stringNumber,
+      position,
+      note: position >= 0 ? getNote(STRING_TUNING[index], position) : 'X',
+      displayText: position >= 0 ? getNote(STRING_TUNING[index], position) : 'X',
+      isRootNote: position >= 0 && getNote(STRING_TUNING[index], position) === root,
+      midiNote,
+      noteName: midiNote !== null ? midiToNote(midiNote) : 'X'
+    };
+  });
+  console.log('Updated chord data:', newChordData);
+  setChordData(newChordData);
+}, [getNote, getMidiNoteFromPosition, midiToNote]);
   
-  const getNote = useCallback((stringNote: Note, fret: number): Note => {
-    const startIndex = NOTE_SEQUENCE.indexOf(stringNote);
-    return NOTE_SEQUENCE[(startIndex + fret) % 12];
-  }, []);
+  // Update chordData when rootNote or chordType changes
+  useEffect(() => {
+    updateChordData(rootNote, chordType);
+    resetAnimations(setAnimations);
+  }, [rootNote, chordType, updateChordData]);
   
-	const parseChordSequence = useCallback((sequence: string): [RootNote, ChordType, number][] => {
-	  console.log("Parsing sequence:", sequence);
-	  const chordRegex = /([A-G])(b|#)?(m(?:inor)?|maj|7|m7|maj7|add9|sus2|sus4|5|6|7sus4|dim|°)?\((\d+)\)/g;
-	  const chords: [RootNote, ChordType, number][] = [];
-	  let match;
-	  while ((match = chordRegex.exec(sequence)) !== null) {
-		let [, root, accidental = '', type = 'major', strums] = match;
-		const fullRoot = (root + accidental) as RootNote;
-		if (type === 'm' || type === 'minor') type = 'minor';
-		if (type === '') type = 'major';
-		chords.push([fullRoot, type as ChordType, parseInt(strums, 10)]);
-	  }
-	  console.log("Parsed chords:", chords);
-	  return chords;
-	}, []);
+const parseChordSequence = useCallback((sequence: string): ChordWithStrum[] => {
+  console.log("Parsing sequence:", sequence);
+  const chordRegex = /([A-G][b#]?)([^(]*)\(((?:[DU]\s?)+|[0-9]+)\)/g;
+  const chords: ChordWithStrum[] = [];
+  
+  let currentSection = "";
+  
+  // Split the sequence by lines and process each line
+  const lines = sequence.split('\n');
+  
+  for (const line of lines) {
+    if (line.trim()) {
+      const parts = line.split(':');
+      if (parts.length > 1) {
+        // This is a label line (e.g., "Verse:", "Chorus:")
+        currentSection = parts[0].trim();
+        console.log(`Section: ${currentSection}`);
+      }
+      
+      const chordsInLine = parts[parts.length - 1].split(/(?<=\))\s*/);
+      for (const chordPart of chordsInLine) {
+        const trimmedChordPart = chordPart.trim();
+        let match;
+        // Reset lastIndex to ensure we start matching from the beginning of each chord part
+        chordRegex.lastIndex = 0;
+        if ((match = chordRegex.exec(trimmedChordPart)) !== null) {
+          let [, rootStr, chordType, strumPattern] = match;
+          
+          if (!isValidRootNote(rootStr)) {
+            console.error(`Invalid root note: ${rootStr}`);
+            continue;
+          }
+          const root = rootStr as RootNote;
+          chordType = chordType.trim() || 'major';
+          let pattern: StrumPattern;
+          if (strumPattern.includes('D') || strumPattern.includes('U')) {
+            pattern = strumPattern.trim().split(/\s+/) as StrumDirection[];
+          } else {
+            pattern = [parseInt(strumPattern, 10)];
+          }
+          
+          chords.push([root, chordType as ChordType, pattern, currentSection]);
+        }
+      }
+    }
+  }
+  
+  console.log("Parsed chords:", chords);
+  return chords;
+}, []);
 
+	// Helper function to check if a string is a valid RootNote
+	const isValidRootNote = (note: string): note is RootNote => {
+	  const validRootNotes: RootNote[] = ['A', 'A#', 'Bb', 'B', 'C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab'];
+	  return validRootNotes.includes(note as RootNote);
+	};
 
 	const handlePlayCurrentChord = () => {
 	  setIsChordPlaying(true);
 	  
 	  // Play the chord and get the total duration
-	  const totalDuration = playChord(rootNote, chordType);
+	  const totalDuration = playChord(rootNote, chordType, [4]);
 	  
 	  // Set a timer to re-enable the button
 	  setTimeout(() => {
@@ -141,197 +227,81 @@ const GuitarChordApp: React.FC = () => {
 	};
 
 
-	const playChord = useCallback((
-	  root: RootNote, 
-	  type: ChordType, 
-	  style?: 'strum' | 'arpeggio',
-	  customChordPlaySpeed?: number,
-	  customBassDampening?: number,
-	  customDuration?: number,
-	  customAttackTime?: number,
-	  customDecayTime?: number,
-	  customSustainLevel?: number,
-	  customReleaseTime?: number,
-	  customVolume?: number
-	) => {
-	  const actualStyle = style || playStyle;
-	  const actualChordPlaySpeed = customChordPlaySpeed !== undefined ? customChordPlaySpeed : chordPlaySpeed;
-	  const actualBassDampening = customBassDampening !== undefined ? customBassDampening : bassDampening;
-	  const actualDuration = customDuration !== undefined ? customDuration : duration;
-	  const actualAttackTime = customAttackTime !== undefined ? customAttackTime : attackTime;
-	  const actualDecayTime = customDecayTime !== undefined ? customDecayTime : decayTime;
-	  const actualSustainLevel = customSustainLevel !== undefined ? customSustainLevel : sustainLevel;
-	  const actualReleaseTime = customReleaseTime !== undefined ? customReleaseTime : releaseTime;
-	  const actualVolume = customVolume !== undefined ? customVolume : volume;
+const playChord = useCallback((
+  root: RootNote, 
+  type: ChordType, 
+  strumPattern: StrumPattern,
+  style?: 'strum' | 'arpeggio',
+  customChordPlaySpeed?: number,
+  customBassDampening?: number,
+  customDuration?: number,
+  customAttackTime?: number,
+  customDecayTime?: number,
+  customSustainLevel?: number,
+  customReleaseTime?: number,
+  customVolume?: number
+) => {
+  const actualStyle = style || playStyle;
+  const actualChordPlaySpeed = customChordPlaySpeed !== undefined ? customChordPlaySpeed : chordPlaySpeed;
+  const actualBassDampening = customBassDampening !== undefined ? customBassDampening : bassDampening;
+  const actualDuration = customDuration !== undefined ? customDuration : duration;
+  const actualAttackTime = customAttackTime !== undefined ? customAttackTime : attackTime;
+  const actualDecayTime = customDecayTime !== undefined ? customDecayTime : decayTime;
+  const actualSustainLevel = customSustainLevel !== undefined ? customSustainLevel : sustainLevel;
+  const actualReleaseTime = customReleaseTime !== undefined ? customReleaseTime : releaseTime;
+  const actualVolume = customVolume !== undefined ? customVolume : volume;
 
-
-	  console.log(`Playing ${root} ${type} chord as ${actualStyle}`);
-	  const positions: ChordPosition = chordPositions[root][type];
-	  
-	  // Adjust speed multiplier calculation
-	  const speedMultiplier = 0.5 + (actualChordPlaySpeed / 100);
-	  
-	  // Base duration for a single note
-	  const baseDuration = actualStyle === 'arpeggio' ? 200 : 50; // ms
-	  
-	  let maxDelay = 0;
-
-	  positions.forEach((position, stringIndex) => {
-		if (position >= 0) {  // Only play unmuted strings
-		  const stringNumber = (stringIndex + 1).toString();
-		  const midiNote = getMidiNoteFromPosition(stringNumber, position);
-		  const stringVolume = (stringIndex < 3 ? actualBassDampening : 1) * actualVolume;
-		  
-		  let delay: number;
-		  if (actualStyle === 'arpeggio') {
-			delay = (stringIndex * baseDuration) / speedMultiplier;
-		  } else { // strum
-			delay = (stringIndex * (baseDuration / positions.length)) / speedMultiplier;
-		  }
-		  maxDelay = Math.max(maxDelay, delay);
-		  
-		  setTimeout(() => {
-			console.log(`Playing note: String ${stringNumber}, MIDI ${midiNote}, Fret ${position}`);
-			playNote(
-			  midiNote, 
-			  volume, 
-			  actualDuration,
-			  actualAttackTime,
-			  actualDecayTime,
-			  actualSustainLevel,
-			  actualReleaseTime
-			);
-		  }, delay);
-		} else {
-		  console.log(`String ${stringIndex + 1} is muted`);
-		}
-	  });
-
-	  const totalDuration = maxDelay + actualDuration;
-	  //const totalDuration = Math.max(maxDelay, actualDuration);  // Adjusted calculation
-	  
-	  return totalDuration;
-	}, [
-	  playStyle,
-	  chordPlaySpeed,
-	  bassDampening,
-	  duration,
-	  attackTime,
-	  decayTime,
-	  sustainLevel,
-	  releaseTime,
-	  volume, 
-	  playNote,
-	  chordPositions,
-	  getMidiNoteFromPosition
-	]);
-
-	  const handleChordChange = useCallback((newRoot: RootNote, newType: ChordType) => {
-		setRootNote(newRoot);
-		setChordType(newType);
-		playChord(newRoot, newType);
-	  }, [playChord, setRootNote, setChordType]);
-
-
-const playSequence = useCallback(() => {
-  if (!isLooping && isPaused) {
-    // If we're not looping and the sequence is paused, don't start playing
-    return;
-  }
-
-  let chords: [RootNote, ChordType, number][];
-  let startIndex: number;
+  console.log(`Playing ${root} ${type} chord as ${actualStyle} with pattern ${strumPattern}`);
+  const positions: ChordPosition = chordPositions[root][type];
   
-  if (isPaused && remainingChords.length > 0) {
-    chords = [...remainingChords];
-    startIndex = 0;
-  } else {
-    chords = parseChordSequence(chordSequence);
-    startIndex = currentChordIndex;
-  }
-
-  if (chords.length === 0) return;
+  const speedMultiplier = 0.5 + (actualChordPlaySpeed / 100);
+  const baseDuration = actualStyle === 'arpeggio' ? 200 : 50; // ms
   
-  setIsPlaying(true);
-  setIsPaused(false);
-  
-  const playNextChord = (index: number) => {
-    if (index >= chords.length) {
-      if (isLooping && !shouldStopAtEnd) {
-        setCurrentChordIndex(0);
-        setRemainingChords(chords);
-        playNextChord(0);
-      } else {
-        // Stop sequence
-        setIsPlaying(false);
-        setIsPaused(false);
-        setCurrentChordIndex(0);
-        setRemainingChords([]);
-        setElapsedTime(0);
-        setShouldStopAtEnd(false);  // Reset the flag
-        const firstChord = chords[0];
-        if (firstChord) {
-          const [root, type] = firstChord;
-          setRootNote(root);
-          setChordType(type);
-        }
-      }
-      return;
-    }
+  let maxDelay = 0;
 
-    const [root, type, strums] = chords[index];
-    setRootNote(root);
-    setChordType(type);
-    setCurrentChordIndex(index);
-    
-    const strumInterval = 1000 / (chordPlaySpeed / 50); // Time between strums
-    let totalDuration = 0;
-
-    const playStrum = (strumIndex: number) => {
-      if (strumIndex < strums) {
-        const strumDuration = playChord(root, type, playStyle, chordPlaySpeed, bassDampening, duration, attackTime, decayTime, sustainLevel, releaseTime);
-        totalDuration += strumDuration;
-
-        timerRef.current = setTimeout(() => {
-          playStrum(strumIndex + 1);
-        }, strumDuration);
-      } else {
-        // Move to next chord
-        setElapsedTime(0);
-        setRemainingChords(chords.slice(index + 1));
+  const playStrum = (isUpstroke: boolean) => {
+    const stringOrder = isUpstroke ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
+    stringOrder.forEach((stringIndex, index) => {
+      const position = positions[stringIndex];
+      const stringNumber = 6 - stringIndex;
+      const midiNote = getMidiNoteFromPosition(stringNumber, position);
+      if (midiNote !== null) {
+        const stringVolume = (stringIndex < 3 ? actualBassDampening : 1) * actualVolume;
         
-        // Schedule the next chord
-        timerRef.current = setTimeout(() => {
-          playNextChord(index + 1);
-        }, Math.max(0, strumInterval - totalDuration));
+        const delay = (index * (baseDuration / positions.length)) / speedMultiplier;
+        maxDelay = Math.max(maxDelay, delay);
+        
+        setTimeout(() => {
+          playAudioNoteWithAnimation(
+            midiNote,
+            stringNumber,
+            position,
+            isUpstroke,
+            stringVolume,
+            actualDuration
+          );
+        }, delay);
       }
-    };
-
-    // Start playing strums
-    playStrum(0);
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setElapsedTime(prev => prev + 100);
-    }, 100);
+    });
   };
 
-  playNextChord(startIndex);
+  let totalDuration = 0;
+  strumPattern.forEach((strum, index) => {
+    if (typeof strum === 'number') {
+      // Old format: play multiple downstrokes
+      for (let i = 0; i < strum; i++) {
+        setTimeout(() => playStrum(false), totalDuration);
+        totalDuration += baseDuration / speedMultiplier;
+      }
+    } else {
+      // New format: play according to the pattern
+      setTimeout(() => playStrum(strum === 'U'), totalDuration);
+      totalDuration += baseDuration / speedMultiplier;
+    }
+  });
 
-  return () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
+  return totalDuration + actualDuration;
 }, [
-  chordSequence,
-  parseChordSequence,
-  setIsPlaying,
-  isLooping,
-  shouldStopAtEnd,
-  setRootNote,
-  setChordType,
-  setCurrentChordIndex,
-  playChord,
   playStyle,
   chordPlaySpeed,
   bassDampening,
@@ -340,17 +310,139 @@ const playSequence = useCallback(() => {
   decayTime,
   sustainLevel,
   releaseTime,
-  currentChordIndex,
-  remainingChords,
-  elapsedTime,
-  setRemainingChords,
-  setElapsedTime,
-  setShouldStopAtEnd,
-  timerRef,
-  intervalRef,
-  isPaused
+  volume, 
+  playAudioNoteWithAnimation,
+  chordPositions,
+  getMidiNoteFromPosition
 ]);
 
+
+	const handleChordChange = useCallback((newRoot: RootNote, newType: ChordType) => {
+	  setRootNote(newRoot);
+	  setChordType(newType);
+	  updateChordData(newRoot, newType);
+	  playChord(newRoot, newType, [4]);
+	}, [playChord, setRootNote, setChordType, updateChordData, triggerNoteAnimation, chordData, setAnimations]);
+
+
+	const playSequence = useCallback(() => {
+	  if (!isLooping && isPaused) {
+		// If we're not looping and the sequence is paused, don't start playing
+		return;
+	  }
+
+	  let chords: ChordWithStrum[];
+	  let startIndex: number;
+	  
+	  if (isPaused && remainingChords.length > 0) {
+		chords = [...remainingChords];
+		startIndex = 0;
+	  } else {
+		chords = parseChordSequence(chordSequence);
+		startIndex = currentChordIndex;
+	  }
+
+	  if (chords.length === 0) return;
+	  
+	  setIsPlaying(true);
+	  setIsPaused(false);
+	  
+	  const playNextChord = (index: number) => {
+		if (index >= chords.length) {
+		  if (isLooping && !shouldStopAtEnd) {
+			setCurrentChordIndex(0);
+			setRemainingChords(chords);
+			playNextChord(0);
+		  } else {
+			// Stop sequence
+			setIsPlaying(false);
+			setIsPaused(false);
+			setCurrentChordIndex(0);
+			setRemainingChords([]);
+			setElapsedTime(0);
+			setShouldStopAtEnd(false);  // Reset the flag
+			const firstChord = chords[0];
+			if (firstChord) {
+			  const [root, type] = firstChord;
+			  setRootNote(root);
+			  setChordType(type);
+			}
+		  }
+		  return;
+		}
+
+		const [root, type, strumPattern] = chords[index];
+		setRootNote(root);
+		setChordType(type);
+		setCurrentChordIndex(index);
+		updateChordData(root, type);
+		const strumInterval = 1000 / (chordPlaySpeed / 50); // Time between strums
+		let totalDuration = 0;
+
+		const playStrum = (strumIndex: number) => {
+		  if (strumIndex < strumPattern.length) {
+			const strumDuration = playChord(root, type, [strumPattern[strumIndex]], playStyle, chordPlaySpeed, bassDampening, duration, attackTime, decayTime, sustainLevel, releaseTime);
+			totalDuration += strumDuration;
+
+			timerRef.current = setTimeout(() => {
+			  playStrum(strumIndex + 1);
+			}, strumDuration);
+		  } else {
+			// Move to next chord
+			setElapsedTime(0);
+			setRemainingChords(chords.slice(index + 1));
+			
+			// Schedule the next chord
+			timerRef.current = setTimeout(() => {
+			  playNextChord(index + 1);
+			}, Math.max(0, strumInterval - totalDuration));
+		  }
+		};
+
+		// Start playing strums
+		playStrum(0);
+
+		if (intervalRef.current) clearInterval(intervalRef.current);
+		intervalRef.current = setInterval(() => {
+		  setElapsedTime(prev => prev + 100);
+		}, 100);
+	  };
+
+	  playNextChord(startIndex);
+
+	  return () => {
+		if (timerRef.current) clearTimeout(timerRef.current);
+		if (intervalRef.current) clearInterval(intervalRef.current);
+	  };
+	}, [
+	  chordSequence,
+	  parseChordSequence,
+	  setIsPlaying,
+	  isLooping,
+	  shouldStopAtEnd,
+	  setRootNote,
+	  setChordType,
+	  setCurrentChordIndex,
+	  playChord,
+	  playStyle,
+	  chordPlaySpeed,
+	  bassDampening,
+	  duration,
+	  attackTime,
+	  decayTime,
+	  sustainLevel,
+	  releaseTime,
+	  currentChordIndex,
+	  remainingChords,
+	  elapsedTime,
+	  setRemainingChords,
+	  setElapsedTime,
+	  setShouldStopAtEnd,
+	  timerRef,
+	  intervalRef,
+	  isPaused,
+	  updateChordData,
+	]);
 
   const pauseSequence = useCallback(() => {
     if (timerRef.current) {
@@ -474,24 +566,53 @@ const handleSkipToEnd = () => {
     const typeLabel = CHORD_TYPE_LABELS[chordType] || chordType;
     return `${rootNote}${typeLabel === 'major' ? '' : typeLabel}`;
   };
+  
+  const handleChordSequenceChange = (newSequence: string | ((prevState: string) => string)) => {
+    setChordSequence(newSequence);
+    // If you need to perform any additional actions when the sequence changes,
+    // you can do so here
+  };
 
-  const renderCurrentInfo = () => {
-  if (chordSequence) {
+const renderCurrentInfo = () => {
+  if (chordSequence && isSequenceValid) {
     const chords = parseChordSequence(chordSequence);
+    let currentSection = "";
     return (
       <div>
-        Current Sequence: {chords.map(([root, type, strums], index) => {
+        Current Sequence: 
+        {chords.map((chord, index) => {
+          const [root, type, strumPattern, section] = chord;
           const chordName = `${root}${type === 'major' ? '' : type}`;
+          const chordDisplay = `${chordName}(${Array.isArray(strumPattern) ? strumPattern.join(' ') : strumPattern})`;
+          
+          let sectionHeader = null;
+          if (section !== currentSection) {
+            currentSection = section;
+            sectionHeader = (
+              <React.Fragment key={`section-${index}`}>
+                <br />{section ? `${section}:` : ''}<br />
+              </React.Fragment>
+            );
+          }
+          
           return (
-            <span key={index} style={{
-              fontWeight: index === currentChordIndex ? 'bold' : 'normal',
-              marginRight: '5px'
-            }}>
-              {chordName}({strums})
-            </span>
+            <React.Fragment key={`chord-${index}`}>
+              {sectionHeader}
+              <span style={{
+                fontWeight: index === currentChordIndex ? 'bold' : 'normal',
+                marginRight: '5px'
+              }}>
+                {chordDisplay}
+                {index < chords.length - 1 ? ', ' : ''}
+              </span>
+            </React.Fragment>
           );
         })}
       </div>
+    );
+  } else if (chordSequence && !isSequenceValid) {
+    return (
+      <div>Current Sequence: <span style={{ color: 'red' }}>Invalid sequence</span></div>
     );
   } else {
     return (
@@ -501,17 +622,31 @@ const handleSkipToEnd = () => {
 };
 
 
-const renderNotePosition = (data: ChordDataItem, visualIndex: number, actualStringNumber: number) => {
-  const handleClick = () => {
+const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number, actualStringNumber: number) => {
+  const handleClick = (event: React.MouseEvent<SVGElement>) => {
+    event.stopPropagation();
+    event.preventDefault();
     if (data.midiNote !== null) {
       console.log(`Clicked note: ${data.noteName} (MIDI: ${data.midiNote}) on string ${actualStringNumber}, fret ${data.position}`);
-      playNote(data.midiNote, volume);  // Pass the current volume
+      playAudioNoteWithAnimation(
+        data.midiNote,
+        data.stringNumber,
+        data.position,
+        false, // isUpstroke - set to false for individual note clicks
+        volume,
+        duration
+      );
     }
+  };
+
+  const commonProps = {
+    onClick: handleClick,
+    style: { cursor: 'pointer' },
   };
 
   if (data.position > 0) {
     return (
-      <g key={`position-${visualIndex}`} onClick={handleClick}>
+      <g key={`position-${visualIndex}`} {...commonProps}>
         <circle 
           cx={20 + data.position * 100 - 50} 
           cy={40 + visualIndex * 30} 
@@ -535,7 +670,7 @@ const renderNotePosition = (data: ChordDataItem, visualIndex: number, actualStri
     );
   } else if (data.position === 0) {
     return (
-      <g key={`open-${visualIndex}`} onClick={handleClick}>
+      <g key={`open-${visualIndex}`} {...commonProps}>
         <circle 
           cx={10} 
           cy={40 + visualIndex * 30} 
@@ -572,7 +707,7 @@ const renderNotePosition = (data: ChordDataItem, visualIndex: number, actualStri
       </text>
     );
   }
-};
+}, [playAudioNoteWithAnimation, volume, duration]);
 
 
 const renderFretboard = useCallback(() => {
@@ -580,7 +715,7 @@ const renderFretboard = useCallback(() => {
 
   // Data preparation (Model)
 	  const chordData = positions.map((position, index) => {
-		const stringNumber = index + 1; // 1 for low E, 6 for high E
+		const stringNumber = 6 - index; // 6 for low E, 1 for high E
 		const stringNote = STRING_TUNING[index];
 		const note = position >= 0 ? getNote(stringNote, position) : 'X';
 		const displayText = showFunction && note !== 'X' ? getChordFunction(note, rootNote, chordType) : note;
@@ -600,10 +735,9 @@ const renderFretboard = useCallback(() => {
 	  });
 
   // Mapping logic (Controller)
-  const mapDataToVisual = (data: typeof chordData[0], visualIndex: number) => {
-    const actualStringNumber = 6 - visualIndex; // Convert visual index to actual string number
-    return renderNotePosition(data, visualIndex, actualStringNumber);
-  };
+	const mapDataToVisual = (data: typeof chordData[0], visualIndex: number) => {
+	  return renderNotePosition(data, visualIndex, data.stringNumber);
+	};
 
   // Helper function to render strings
 const renderString = (index: number) => (
@@ -667,9 +801,10 @@ const renderString = (index: number) => (
           {fret}
         </text>
       ))}
+	  <AnimationLayer chordData={chordData} animations={animations}/>
     </svg>
   );
-}, [rootNote, chordType, showFunction, getNote, getChordFunction]);
+}, [rootNote, chordType, showFunction, getNote, getChordFunction, chordPositions, STRING_TUNING, getMidiNoteFromPosition, midiToNote, renderNotePosition, animations]);
 
 
 
@@ -817,19 +952,20 @@ const renderString = (index: number) => (
 				setRootNote={setRootNote}
 				chordType={chordType}
 				setChordType={setChordType}
-				playChord={handleChordChange}
+				playChord={(newRoot, newType) => playChord(newRoot, newType, [4])}
 			  />
 			</div>
 		  )}
 		  
 		  {activeTab === 'sequence' && (
-			  <div>
-				<p>{introTexts.chordSequenceGenerator}</p>
-				<SequenceEditor 
-				  chordSequence={chordSequence}
-				  setChordSequence={setChordSequence}
-				/>
-			   </div>
+			<div>
+			  <p>{introTexts.chordSequenceGenerator}</p>
+			  <SequenceEditor 
+				chordSequence={chordSequence}
+				setChordSequence={handleChordSequenceChange}
+				setSequenceValidity={setIsSequenceValid}
+			  />
+			</div>
 		  )}
 
 		{activeTab === 'sound' && (
@@ -860,7 +996,8 @@ const renderString = (index: number) => (
 		{!isInitialized && (
 		  <button onClick={initializeAudio}>Initialize Audio</button>
 		)}
-
+	  <AnimationLayer chordData={chordData} animations={animations} />
+      <style>{animationStyles} </style>
 	  </div>
 	);
 };

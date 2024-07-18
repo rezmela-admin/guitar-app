@@ -8,9 +8,10 @@ import { introTexts } from './appIntroTexts';
 interface SequenceEditorProps {
   chordSequence: string;
   setChordSequence: React.Dispatch<React.SetStateAction<string>>;
+  setSequenceValidity: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChordSequence }) => {
+const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChordSequence, setSequenceValidity }) => {
   const [cursorPosition, setCursorPosition] = useState<number>(0);
   const [selectedKey, setSelectedKey] = useState<string>('C Major');
   const [selectedProgression, setSelectedProgression] = useState<string>('');
@@ -24,12 +25,28 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
     setLocalChordSequence(chordSequence);
   }, [chordSequence]);
 
-  const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newSequence = event.target.value;
+const validateSequence = (sequence: string): boolean => {
+  const chordPattern = /([A-G][b#]?)([^(]*)\(((?:[DU]\s?)+|[0-9]+)\)/;
+  const lines = sequence.split('\n');
+  return lines.some(line => {
+    const parts = line.split(':');
+    const chordsSection = parts[parts.length - 1];
+    return chordsSection.split(',').some(part => chordPattern.test(part.trim()));
+  });
+};
+
+  const updateSequence = (newSequence: string) => {
     setLocalChordSequence(newSequence);
-    setChordSequence(newSequence);
-    console.log("Text changed. New sequence:", newSequence);
+    const isValid = validateSequence(newSequence);
+	setChordSequence(newSequence);
+	setSequenceValidity(isValid);
+	console.log(isValid ? "Valid sequence:" : "Invalid sequence:", newSequence);
   };
+  
+  const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+	  updateSequence(event.target.value);
+  };
+
 
   const handleCursorChange = () => {
     if (textAreaRef.current) {
@@ -37,18 +54,17 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
     }
   };
 
-  const updateTextAreaContent = (newContent: string) => {
-    console.log("Updating text area content:", newContent);
-    setLocalChordSequence(newContent);
-    setChordSequence(newContent);
-    const newPosition = newContent.length;
-    setCursorPosition(newPosition);
-    if (textAreaRef.current) {
-      textAreaRef.current.focus();
-      textAreaRef.current.setSelectionRange(newPosition, newPosition);
-    }
-    console.log("Text area content updated");
-  };
+	const updateTextAreaContent = (newContent: string) => {
+	  console.log("Updating text area content:", newContent);
+	  updateSequence(newContent);
+	  const newPosition = newContent.length;
+	  setCursorPosition(newPosition);
+	  if (textAreaRef.current) {
+		textAreaRef.current.focus();
+		textAreaRef.current.setSelectionRange(newPosition, newPosition);
+	  }
+	  console.log("Text area content updated");
+	};
 
   const generateSequence = () => {
     console.log("Generate Sequence clicked");
@@ -74,13 +90,13 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
     }
   };
 
-  const handleStockSongSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSong(e.target.value);
-    const song = stockSongs.songs.find(s => s.title === e.target.value);
-    if (song) {
-      updateTextAreaContent(song.chordSequence);
-    }
-  };
+	const handleStockSongSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+	   setSelectedSong(e.target.value);
+	   const song = stockSongs.songs.find(s => s.title === e.target.value);
+	   if (song) {
+		 updateSequence(song.chordSequence);
+	   }
+	};
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,7 +122,6 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
     URL.revokeObjectURL(url);
   };
 
-
   return (
     <div>
       <textarea
@@ -119,7 +134,7 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
       />
       <div style={{ marginBottom: '20px' }}>
         <h4>Chord Sequence Generator</h4>
-		<p>{introTexts.stockSongs}</p>
+        <p>{introTexts.stockSongs}</p>
         <select 
           value={selectedKey} 
           onChange={(e) => setSelectedKey(e.target.value)}
@@ -141,7 +156,7 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
       </div>
       <div>
         <h4>Stock Songs</h4>
-		<p>{introTexts.stockSongs}</p>
+        <p>{introTexts.stockSongs}</p>
         <select 
           value={selectedSong}
           onChange={handleStockSongSelection}
@@ -163,6 +178,10 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
         />
         <button onClick={() => fileInputRef.current?.click()}>Import Sequence</button>
         <button onClick={handleExport}>Export Sequence</button>
+      </div>
+      <div>
+        <h4>Strumming Pattern Guide</h4>
+        <p>Use D for downstrokes and U for upstrokes. Example: C(D D U D) Am(D U D U)</p>
       </div>
     </div>
   );

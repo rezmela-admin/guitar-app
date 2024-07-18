@@ -81,31 +81,21 @@ export const useAudioSamples = () => {
 	  const noteName = midiToNote(midiNote);
 	  console.log(`Playing note: ${noteName} (MIDI: ${midiNote}) at volume ${volume} for ${duration}ms`);
 	  
-	  const availableSamples = Object.keys(audioBuffersRef.current);
-	  const closestSample = availableSamples.reduce((prev, curr) => {
-		const prevMidi = noteToMidi(prev);
-		const currMidi = noteToMidi(curr);
-		return Math.abs(currMidi - midiNote) < Math.abs(prevMidi - midiNote) ? curr : prev;
-	  });
+	  // Directly use the correct sample
+	  const sampleName = noteName;
 	  
-	  if (audioBuffersRef.current[closestSample]) {
+	  if (audioBuffersRef.current[sampleName]) {
 		const source = audioContextRef.current.createBufferSource();
-		source.buffer = audioBuffersRef.current[closestSample];
+		source.buffer = audioBuffersRef.current[sampleName];
 		
 		const gainNode = audioContextRef.current.createGain();
 		const currentTime = audioContextRef.current.currentTime;
 		
-		// Improved envelope
+		// Envelope setup
 		const initialGain = 0.001;
 		gainNode.gain.setValueAtTime(initialGain, currentTime);
-		
-		// Attack (using exponential ramp for more natural sound)
 		gainNode.gain.exponentialRampToValueAtTime(volume, currentTime + attackTime);
-		
-		// Decay to sustain level (using setTargetAtTime for smoother transition)
 		gainNode.gain.setTargetAtTime(volume * sustainLevel, currentTime + attackTime, decayTime / 3);
-		
-		// Release (using setTargetAtTime for smoother fade-out)
 		const noteDuration = Math.max(duration / 1000, releaseTime);
 		const releaseStart = currentTime + noteDuration - releaseTime;
 		gainNode.gain.setTargetAtTime(initialGain, releaseStart, releaseTime / 3);
@@ -113,13 +103,13 @@ export const useAudioSamples = () => {
 		source.connect(gainNode);
 		gainNode.connect(audioContextRef.current.destination);
 		
-		const sampleMidi = noteToMidi(closestSample);
-		const playbackRate = Math.pow(2, (midiNote - sampleMidi) / 12);
-		source.playbackRate.setValueAtTime(playbackRate, currentTime);
+		// No pitch adjustment needed as we're using the exact sample
+		source.playbackRate.setValueAtTime(1, currentTime);
 		
 		source.start(currentTime);
 		source.stop(currentTime + noteDuration);
 		
+		console.log(`Playing exact sample: ${sampleName}`);
 		console.log(`Scheduled note to stop after ${noteDuration * 1000}ms`);
 	  } else {
 		console.warn(`No sample found for note: ${noteName} (MIDI: ${midiNote})`);
