@@ -7,6 +7,7 @@ import SequenceEditor from './SequenceEditor';
 import SoundControls from './SoundControls';
 import { introTexts } from './appIntroTexts';
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
+import { chordFingerData, fingerColors } from './ChordFingerData';
 
 
 
@@ -68,7 +69,7 @@ const GuitarChordApp: React.FC = () => {
   const [sustainLevel, setSustainLevel] = useState(0.55);
   const [releaseTime, setReleaseTime] = useState(5.0);
   const [isChordPlaying, setIsChordPlaying] = useState(false);
-  const [chordPlaySpeed, setChordPlaySpeed] = useState(79);
+  const [chordPlaySpeed, setChordPlaySpeed] = useState(11);
   const [duration, setDuration] = useState(495);
   
   const [isPaused, setIsPaused] = useState(false);
@@ -644,47 +645,35 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
     style: { cursor: 'pointer' },
   };
 
-  if (data.position > 0) {
+  // Correct the finger assignment
+  const stringIndex = 5 - visualIndex; // Reverse the index to match the chord data array
+  const fingerLetter = chordFingerData[rootNote]?.[chordType]?.[stringIndex] ?? '0';
+  const fingerColorMap: { [key: string]: string } = {
+    '0': fingerColors[0],  // Open string or unused
+    'i': fingerColors[1],  // Index finger
+    'm': fingerColors[2],  // Middle finger
+    'r': fingerColors[3],  // Ring finger
+    'a': fingerColors[4],  // Pinky
+  };
+  const fingerColor = fingerColorMap[fingerLetter];
+
+  if (data.position >= 0) { // Include open strings in this condition
     return (
       <g key={`position-${visualIndex}`} {...commonProps}>
         <circle 
-          cx={20 + data.position * 100 - 50} 
+          cx={data.position === 0 ? 10 : (20 + data.position * 100 - 50)}
           cy={40 + visualIndex * 30} 
-          r={12} 
-          fill={data.isRootNote ? "#FFD700" : "yellow"} 
-          stroke={data.isRootNote ? "#CD853F" : "black"} 
+          r={data.position === 0 ? 8 : 12}
+          fill={fingerColor} 
+          stroke={data.isRootNote ? "#CD853F" : fingerColor} 
           strokeWidth={data.isRootNote ? 3 : 1}
         />
         <text 
-          x={20 + data.position * 100 - 50} 
+          x={data.position === 0 ? 10 : (20 + data.position * 100 - 50)}
           y={45 + visualIndex * 30} 
           fontFamily="Arial" 
           fontSize={12} 
           fill="black" 
-          textAnchor="middle"
-          fontWeight={data.isRootNote ? "bold" : "normal"}
-        >
-          {data.displayText}
-        </text>
-      </g>
-    );
-  } else if (data.position === 0) {
-    return (
-      <g key={`open-${visualIndex}`} {...commonProps}>
-        <circle 
-          cx={10} 
-          cy={40 + visualIndex * 30} 
-          r={8} 
-          fill={data.isRootNote ? "#FFD700" : "none"} 
-          stroke={data.isRootNote ? "#CD853F" : "white"} 
-          strokeWidth={data.isRootNote ? 3 : 2}
-        />
-        <text 
-          x={10} 
-          y={45 + visualIndex * 30} 
-          fontFamily="Arial" 
-          fontSize={12} 
-          fill={data.isRootNote ? "black" : "white"} 
           textAnchor="middle"
           fontWeight={data.isRootNote ? "bold" : "normal"}
         >
@@ -700,15 +689,42 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
         y={45 + visualIndex * 30} 
         fontFamily="Arial" 
         fontSize={20} 
-        fill="white" 
+        fill="#E0E0E0"
         textAnchor="middle"
       >
         ×
       </text>
     );
   }
-}, [playAudioNoteWithAnimation, volume, duration]);
+}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType]);
 
+const FingerLegend: React.FC = () => {
+  const legendItems = [
+    { color: fingerColors[1], label: 'Index (i)' },
+    { color: fingerColors[2], label: 'Middle (m)' },
+    { color: fingerColors[3], label: 'Ring (r)' },
+    { color: fingerColors[4], label: 'Pinky (a)' },
+    { color: fingerColors[0], label: 'Open/Unused' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px', marginBottom: '10px' }}>
+	  		Finger Color Guide: 
+      {legendItems.map(({ color, label }, index) => (
+        <div key={index} style={{ display: 'flex', alignItems: 'center', marginRight: '15px' }}>
+          <div style={{ 
+            width: '15px', 
+            height: '15px', 
+            borderRadius: '50%', 
+            backgroundColor: color, 
+            marginRight: '5px' 
+          }} />
+          <span style={{ fontSize: '12px' }}>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const renderFretboard = useCallback(() => {
   const positions: ChordPosition = chordPositions[rootNote][chordType];
@@ -807,8 +823,6 @@ const renderString = (index: number) => (
 }, [rootNote, chordType, showFunction, getNote, getChordFunction, chordPositions, STRING_TUNING, getMidiNoteFromPosition, midiToNote, renderNotePosition, animations]);
 
 
-
-
 	 if (isLoading) {
 		return (
 		  <div>
@@ -847,6 +861,7 @@ const renderString = (index: number) => (
 			  Show Chord Function
 			</label>
 		  </div>
+		  	  <FingerLegend />
 		  <p style={{ textAlign: 'center', marginBottom: '20px', fontStyle: 'italic' }}>
 			Try our preloaded sequence or create your own in the Sequence Editor tab!
 		  </p>
@@ -993,6 +1008,7 @@ const renderString = (index: number) => (
 			  />
 		  </div>
 		)}
+		
 		{!isInitialized && (
 		  <button onClick={initializeAudio}>Initialize Audio</button>
 		)}
