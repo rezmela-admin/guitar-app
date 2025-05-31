@@ -310,6 +310,7 @@ const playChord = useCallback((
       }
 
       if (midiNote !== null) {
+        const confirmedMidiNote = midiNote; // TypeScript infers this as 'number'
         // stringIndexInRenderOrder is 0,1,2 for E,A,D (bass); 3,4,5 for G,B,e (treble)
         const stringVolume = (stringIndexInRenderOrder < 3 ? actualBassDampening : 1) * actualVolume;
         
@@ -318,7 +319,7 @@ const playChord = useCallback((
         
         setTimeout(() => {
           playAudioNoteWithAnimation(
-            midiNote,
+            confirmedMidiNote, // Use the non-null confirmed variable
             stringNumberApi, // Use the correct string number for animation
             typeof position === 'number' ? position : -1, // Pass numeric position or -1
             isUpstroke,
