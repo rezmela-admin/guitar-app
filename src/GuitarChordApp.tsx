@@ -42,8 +42,8 @@ const GuitarChordApp: React.FC = () => {
   
   const [isPaused, setIsPaused] = useState(false);
   const [remainingChords, setRemainingChords] = useState<ChordWithStrum[]>([]);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // const [elapsedTime, setElapsedTime] = useState(0); // Removed
+  // const intervalRef = useRef<NodeJS.Timeout | null>(null); // Removed
   const [shouldStopAtEnd, setShouldStopAtEnd] = useState(false);
   const [chordData, setChordData] = useState<ChordDataItem[]>([]);
   const [animations, setAnimations] = useState<JSX.Element[]>([]);
@@ -361,7 +361,7 @@ const playChord = useCallback((
 			setIsPaused(false);
 			setCurrentChordIndex(0);
 			setRemainingChords([]);
-			setElapsedTime(0);
+			// setElapsedTime(0); // Removed
 			setShouldStopAtEnd(false);  // Reset the flag
 			const firstChord = chords[0];
 			if (firstChord) {
@@ -391,7 +391,7 @@ const playChord = useCallback((
 			}, strumDuration);
 		  } else {
 			// Move to next chord
-			setElapsedTime(0);
+			// setElapsedTime(0); // Removed
 			setRemainingChords(chords.slice(index + 1));
 			
 			// Schedule the next chord
@@ -404,17 +404,14 @@ const playChord = useCallback((
 		// Start playing strums
 		playStrum(0);
 
-		if (intervalRef.current) clearInterval(intervalRef.current);
-		intervalRef.current = setInterval(() => {
-		  setElapsedTime(prev => prev + 100);
-		}, 100);
+		// Removed setInterval block for elapsedTime
 	  };
 
 	  playNextChord(startIndex);
 
 	  return () => {
 		if (timerRef.current) clearTimeout(timerRef.current);
-		if (intervalRef.current) clearInterval(intervalRef.current);
+		// if (intervalRef.current) clearInterval(intervalRef.current); // Removed
 	  };
 	}, [
 	  chordSequence,
@@ -436,12 +433,11 @@ const playChord = useCallback((
 	  releaseTime,
 	  currentChordIndex,
 	  remainingChords,
-  // elapsedTime, // Removed as per ESLint warning
 	  setRemainingChords,
-	  setElapsedTime,
+	  // setElapsedTime, // Removed
 	  setShouldStopAtEnd,
 	  timerRef,
-	  intervalRef,
+	  // intervalRef, // Removed
 	  isPaused,
 	  updateChordData,
 	]);
@@ -450,9 +446,9 @@ const playChord = useCallback((
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+    // if (intervalRef.current) { // Removed
+    //   clearInterval(intervalRef.current);
+    // }
     setIsPaused(true);
     setIsPlaying(false);
   }, []);
@@ -462,14 +458,14 @@ const stopSequence = useCallback(() => {
   if (timerRef.current) {
     clearTimeout(timerRef.current);
   }
-  if (intervalRef.current) {
-    clearInterval(intervalRef.current);
-  }
+  // if (intervalRef.current) { // Removed
+  //  clearInterval(intervalRef.current);
+  // }
   setIsPlaying(false);
   setIsPaused(false);
   setCurrentChordIndex(0);
   setRemainingChords([]);
-  setElapsedTime(0);
+  // setElapsedTime(0); // Removed
 
   // Reset to the first chord
   const firstChord = parseChordSequence(chordSequence)[0];
@@ -487,7 +483,7 @@ const stopSequence = useCallback(() => {
       playSequence();
     } else {
       setRemainingChords([]);
-      setElapsedTime(0);
+      // setElapsedTime(0); // Removed
 	  setCurrentChordIndex(0); 
       playSequence();
     }
