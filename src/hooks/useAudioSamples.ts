@@ -19,9 +19,9 @@ export const useAudioSamples = () => {
       console.log("AudioContext created successfully");
 
       const samples = [
-        'E2', 'F2', 'F#2', 'G2', 'G#2', 'A2', 'A#2', 'B2',
-        'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3',
-        'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4'
+        'E2', 'F2', 'Fs2', 'G2', 'Gs2', 'A2', 'As2', 'B2',
+        'C3', 'Cs3', 'D3', 'Ds3', 'E3', 'F3', 'Fs3', 'G3', 'Gs3', 'A3', 'As3', 'B3',
+        'C4', 'Cs4', 'D4', 'Ds4', 'E4', 'F4', 'Fs4', 'G4', 'Gs4', 'A4'
       ];
 
       const totalSamples = samples.length;
@@ -81,8 +81,8 @@ export const useAudioSamples = () => {
 	  const noteName = midiToNote(midiNote);
 	  console.log(`Playing note: ${noteName} (MIDI: ${midiNote}) at volume ${volume} for ${duration}ms`);
 	  
-	  // Directly use the correct sample
-	  const sampleName = noteName;
+	  // Directly use the correct sample, replacing # with s for filename matching
+	  const sampleName = noteName.replace('#', 's');
 	  
 	  if (audioBuffersRef.current[sampleName]) {
 		const source = audioContextRef.current.createBufferSource();
