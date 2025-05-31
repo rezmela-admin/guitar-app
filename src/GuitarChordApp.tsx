@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, noteToMidi, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types';
+import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types'; // Removed noteToMidi
 import { transposeShape } from './transpose';
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
@@ -10,42 +10,7 @@ import { introTexts } from './appIntroTexts';
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
 
-
-
-interface SoundControlsProps {
-  playStyle: 'strum' | 'arpeggio';
-  setPlayStyle: React.Dispatch<React.SetStateAction<'strum' | 'arpeggio'>>;
-  bassDampening: number;
-  setBassDampening: React.Dispatch<React.SetStateAction<number>>;
-  volume: number;
-  setVolume: React.Dispatch<React.SetStateAction<number>>;
-  attackTime: number;
-  setAttackTime: React.Dispatch<React.SetStateAction<number>>;
-  decayTime: number;
-  setDecayTime: React.Dispatch<React.SetStateAction<number>>;
-  sustainLevel: number;
-  setSustainLevel: React.Dispatch<React.SetStateAction<number>>;
-  releaseTime: number;
-  setReleaseTime: React.Dispatch<React.SetStateAction<number>>;
-  chordPlaySpeed: number;
-  setChordPlaySpeed: React.Dispatch<React.SetStateAction<number>>;
-  duration: number;
-  setDuration: React.Dispatch<React.SetStateAction<number>>;
-}
-
-interface ChordBrowserProps {
-  rootNote: RootNote;
-  setRootNote: React.Dispatch<React.SetStateAction<RootNote>>;
-  chordType: ChordType;
-  setChordType: React.Dispatch<React.SetStateAction<ChordType>>;
-  playChord: (root: RootNote, type: ChordType) => void;
-}
-
-interface AnimatingNote {
-  midiNote: number;
-  progress: number;
-}
-
+// Removed SoundControlsProps, ChordBrowserProps, AnimatingNote interfaces
 
 const GuitarChordApp: React.FC = () => {
 
@@ -128,7 +93,7 @@ const playAudioNoteWithAnimation = useCallback((
   console.log(`Attempting to play and animate note: ${midiNote}`);
   playAudioNote(midiNote, volume, duration);
   triggerNoteAnimation(midiNote, stringNumber, position, isUpstroke, setAnimations);
-}, [playAudioNote, triggerNoteAnimation, setAnimations]);
+}, [playAudioNote, setAnimations]); // Removed triggerNoteAnimation (stable import)
 
   
 	   useEffect(() => {
@@ -174,7 +139,7 @@ const playAudioNoteWithAnimation = useCallback((
     });
     console.log('Updated chord data:', newChordData);
     setChordData(newChordData);
-  }, [getNote, selectedGShape, midiToNote]);
+  }, [getNote, selectedGShape]); // Removed midiToNote (stable import)
   
   // Update chordData when rootNote or chordType or selectedGShape changes
   useEffect(() => {
@@ -270,10 +235,7 @@ const playChord = useCallback((
   const actualChordPlaySpeed = customChordPlaySpeed !== undefined ? customChordPlaySpeed : chordPlaySpeed;
   const actualBassDampening = customBassDampening !== undefined ? customBassDampening : bassDampening;
   const actualDuration = customDuration !== undefined ? customDuration : duration;
-  const actualAttackTime = customAttackTime !== undefined ? customAttackTime : attackTime;
-  const actualDecayTime = customDecayTime !== undefined ? customDecayTime : decayTime;
-  const actualSustainLevel = customSustainLevel !== undefined ? customSustainLevel : sustainLevel;
-  const actualReleaseTime = customReleaseTime !== undefined ? customReleaseTime : releaseTime;
+  // actualAttackTime, actualDecayTime, actualSustainLevel, actualReleaseTime removed as they are not used
   const actualVolume = customVolume !== undefined ? customVolume : volume;
 
   console.log(`Playing ${root} ${type} chord as ${actualStyle} with pattern ${strumPattern}`);
@@ -352,14 +314,14 @@ const playChord = useCallback((
   chordPlaySpeed,
   bassDampening,
   duration,
-  attackTime,
-  decayTime,
-  sustainLevel,
-  releaseTime,
+  // attackTime, // Removed, not used to call playAudioNoteWithAnimation
+  // decayTime, // Removed
+  // sustainLevel, // Removed
+  // releaseTime, // Removed
   volume,
   playAudioNoteWithAnimation,
   // chordPositions,
-  getMidiNoteFromPosition,
+  // getMidiNoteFromPosition, // Removed (stable import)
   selectedGShape
 ]);
 
@@ -369,7 +331,7 @@ const playChord = useCallback((
 	  setChordType(newType);
 	  updateChordData(newRoot, newType);
 	  playChord(newRoot, newType, [4]);
-	}, [playChord, setRootNote, setChordType, updateChordData, triggerNoteAnimation, chordData, setAnimations]);
+	}, [playChord, setRootNote, setChordType, updateChordData, setAnimations]); // Removed triggerNoteAnimation (stable import), chordData (not used for callback identity)
 
 
 	const playSequence = useCallback(() => {
@@ -753,7 +715,7 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
       </text>
     );
   }
-}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType]);
+}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType, selectedGShape]); // Added selectedGShape
 
 const FingerLegend: React.FC = () => {
   const legendItems = [
@@ -877,7 +839,7 @@ const renderString = (index: number) => (
 	  <AnimationLayer chordData={chordData} animations={animations}/>
     </svg>
   );
-}, [rootNote, chordType, showFunction, getNote, getChordFunction, chordPositions, STRING_TUNING, getMidiNoteFromPosition, midiToNote, renderNotePosition, animations]);
+}, [rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations]); // Removed chordPositions, STRING_TUNING, getMidiNoteFromPosition, midiToNote (stable imports/globals)
 
 
 	 if (isLoading) {

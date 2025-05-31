@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Note, NOTE_SEQUENCE, midiToNote, noteToMidi } from '../types';
+import { midiToNote } from '../types';
 
 export const useAudioSamples = () => {
   const [isLoading, setIsLoading] = useState(true);
