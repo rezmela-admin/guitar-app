@@ -93,7 +93,7 @@ const playAudioNoteWithAnimation = useCallback((
   console.log(`Attempting to play and animate note: ${midiNote}`);
   playAudioNote(midiNote, volume, duration);
   triggerNoteAnimation(midiNote, stringNumber, position, isUpstroke, setAnimations);
-}, [playAudioNote, setAnimations]); // Removed triggerNoteAnimation (stable import)
+}, [playAudioNote]); // Removed setAnimations (stable setter) and triggerNoteAnimation (stable import)
 
   
 	   useEffect(() => {
@@ -325,14 +325,7 @@ const playChord = useCallback((
   selectedGShape
 ]);
 
-
-	const handleChordChange = useCallback((newRoot: RootNote, newType: ChordType) => {
-	  setRootNote(newRoot);
-	  setChordType(newType);
-	  updateChordData(newRoot, newType);
-	  playChord(newRoot, newType, [4]);
-	}, [playChord, setRootNote, setChordType, updateChordData, setAnimations]); // Removed triggerNoteAnimation (stable import), chordData (not used for callback identity)
-
+	// Removed unused handleChordChange useCallback
 
 	const playSequence = useCallback(() => {
 	  if (!isLooping && isPaused) {
@@ -443,7 +436,7 @@ const playChord = useCallback((
 	  releaseTime,
 	  currentChordIndex,
 	  remainingChords,
-	  elapsedTime,
+  // elapsedTime, // Removed as per ESLint warning
 	  setRemainingChords,
 	  setElapsedTime,
 	  setShouldStopAtEnd,
