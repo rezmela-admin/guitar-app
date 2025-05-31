@@ -1,4 +1,4 @@
-//test
+
 # Guitar Chord Diagram
 
 A simple web application to display guitar chord diagrams.

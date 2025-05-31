@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, noteToMidi, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types';
-import { transposeShape } from '../transpose';
+import { transposeShape } from './transpose';
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
 import { PlayIcon, PauseIcon, StepBackwardIcon, StepForwardIcon, RepeatIcon, StopIcon,SkipToStartIcon, SkipToEndIcon, MusicalSymbolIcon } from './IconComponents';
@@ -161,26 +161,26 @@ const playAudioNoteWithAnimation = useCallback((
         note = getNote(currentStringNote, position);
         midiNote = getMidiNoteFromPosition(stringNumber.toString(), position);
       }
-      
+
       return {
         stringNumber,
-        position: typeof position === 'number' ? position : -1, 
+        position: typeof position === 'number' ? position : -1,
         note,
         displayText: note,
-        isRootNote: note === root, 
+        isRootNote: note === root,
         midiNote,
         noteName: midiNote !== null ? midiToNote(midiNote) : 'X'
       };
     });
     console.log('Updated chord data:', newChordData);
     setChordData(newChordData);
-  }, [getNote, selectedGShape, midiToNote]); 
+  }, [getNote, selectedGShape, midiToNote]);
   
   // Update chordData when rootNote or chordType or selectedGShape changes
   useEffect(() => {
     updateChordData(rootNote, chordType);
     resetAnimations(setAnimations);
-  }, [rootNote, chordType, updateChordData, selectedGShape]); 
+  }, [rootNote, chordType, updateChordData, selectedGShape]);
   
 const parseChordSequence = useCallback((sequence: string): ChordWithStrum[] => {
   console.log("Parsing sequence:", sequence);
@@ -277,7 +277,7 @@ const playChord = useCallback((
   const actualVolume = customVolume !== undefined ? customVolume : volume;
 
   console.log(`Playing ${root} ${type} chord as ${actualStyle} with pattern ${strumPattern}`);
-  
+
   let shapeToPlay: ChordPosition;
   if (root === 'G' && type === 'major') {
     if (selectedGShape === 'E-shape') {
@@ -301,9 +301,9 @@ const playChord = useCallback((
     stringOrder.forEach((stringIndexInRenderOrder, indexInStrum) => {
       // stringIndexInRenderOrder is 0 (low E) to 5 (high E)
       // shapeToPlay is indexed [lowE, ..., highE]
-      const position = shapeToPlay[stringIndexInRenderOrder]; 
+      const position = shapeToPlay[stringIndexInRenderOrder];
       const stringNumberApi = 6 - stringIndexInRenderOrder; // API string num 1 (high E) to 6 (low E)
-      
+
       let midiNote: number | null = null;
       if (typeof position === 'number' && position >=0) {
         midiNote = getMidiNoteFromPosition(stringNumberApi.toString(), position);
@@ -357,9 +357,9 @@ const playChord = useCallback((
   releaseTime,
   volume,
   playAudioNoteWithAnimation,
-  // chordPositions, 
+  // chordPositions,
   getMidiNoteFromPosition,
-  selectedGShape 
+  selectedGShape
 ]);
 
 
@@ -692,7 +692,7 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
 
   // Correct the finger assignment
   const stringIndex = 5 - visualIndex; // Reverse the index to match the chord data array (0 for low E, 5 for high E)
-  
+
   let fingerLetter: string | number;
   if (rootNote === 'G' && chordType === 'major') {
     if (selectedGShape === 'E-shape') {
@@ -919,14 +919,14 @@ const renderString = (index: number) => (
 		  </div>
           {rootNote === 'G' && chordType === 'major' && (
             <div style={{ marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
-              <button 
-                onClick={() => setSelectedGShape('E-shape')} 
+              <button
+                onClick={() => setSelectedGShape('E-shape')}
                 disabled={selectedGShape === 'E-shape'}
                 style={{ marginRight: '5px' }}
               >
                 G (E-shape at 3rd fret)
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedGShape('A-shape')}
                 disabled={selectedGShape === 'A-shape'}
                 style={{ marginLeft: '5px' }}

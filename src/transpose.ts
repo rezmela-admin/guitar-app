@@ -25,7 +25,7 @@ export function transposeShape(baseShape: ReadonlyChordShape, fretOffset: number
   if (fretOffset < 0) {
     // Or throw an error, depending on desired behavior for negative offsets
     console.warn("transposeShape called with negative fretOffset. Shapes can only be moved up the fretboard.");
-    return [...baseShape]; 
+    return [...baseShape];
   }
   if (fretOffset === 0) {
     return [...baseShape];
@@ -91,7 +91,7 @@ export function getBarreInfo(transposedShape: ReadonlyChordShape, fretOffset: nu
 
   const startString = stringsAtBarreFret[0];
   const endString = stringsAtBarreFret[stringsAtBarreFret.length - 1];
-  
+
   // A common interpretation of a barre is that it covers contiguous strings,
   // or at least the highest and lowest strings identified are part of the barre.
   // This function currently identifies the span of strings that are *exactly* at the barreFret.
