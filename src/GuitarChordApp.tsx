@@ -15,6 +15,7 @@ import { chordFingerData, fingerColors } from './ChordFingerData';
 const GuitarChordApp: React.FC = () => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null); // Added
   const [showFunction, setShowFunction] = useState(false);
   const [volume, setVolume] = useState(0.5); // Initialize volume to half max.
   const [activeTab, setActiveTab] = useState<'browser' | 'sequence' | 'sound'>('browser');
@@ -148,6 +149,66 @@ const playAudioNoteWithAnimation = useCallback((
     updateChordData(rootNote, chordType, newVoicings, newIndex);
     resetAnimations(setAnimations);
   }, [rootNote, chordType, updateChordData]); // updateChordData must be stable
+
+  useEffect(() => {
+    if (scrollContainerRef.current && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
+      const currentVoicing = availableVoicings[selectedVoicingIndex];
+
+      let targetFretToView = currentVoicing.fretOffset;
+
+      let minFretInShape = -1;
+      for (const pos of currentVoicing.displayShape) {
+        if (typeof pos === 'number' && pos >= 0) {
+          if (minFretInShape === -1 || pos < minFretInShape) {
+            minFretInShape = pos;
+          }
+        }
+      }
+
+      if (minFretInShape !== -1) {
+          targetFretToView = minFretInShape;
+      }
+
+      let targetScrollLeft = 0;
+      if (targetFretToView > 1) {
+        // If the chord's lowest fret is 2 or higher, scroll to show the fret *before* it.
+        targetScrollLeft = 20 + ((targetFretToView - 1) - 1) * 100;
+      } else if (targetFretToView === 1) {
+        // If chord starts at fret 1, scroll to the beginning (show nut).
+        targetScrollLeft = 0;
+      } else {
+        // If chord starts at fret 0 (nut) or targetFretToView is invalid, scroll to beginning.
+        targetScrollLeft = 0;
+      }
+      targetScrollLeft = Math.max(0, targetScrollLeft); // Ensure not negative
+
+      const svgWidth = 1350;
+      const containerWidth = scrollContainerRef.current.offsetWidth;
+      // if (targetScrollLeft + containerWidth > svgWidth && svgWidth > containerWidth) { // ensure svg is actually wider
+      //     targetScrollLeft = Math.max(0, svgWidth - containerWidth);
+      // } else if (svgWidth <= containerWidth) { // if svg is not wider, scroll to 0
+      //     targetScrollLeft = 0;
+      // }
+      // Refined overscroll logic:
+      if (svgWidth <= containerWidth) {
+        targetScrollLeft = 0; // If SVG fits, no scroll needed from left.
+      } else if (targetScrollLeft + containerWidth > svgWidth) {
+        targetScrollLeft = svgWidth - containerWidth; // Prevent overscrolling right.
+      }
+      targetScrollLeft = Math.max(0, targetScrollLeft); // Ensure it's not negative after adjustments
+
+
+      scrollContainerRef.current.scrollTo({
+        left: targetScrollLeft,
+        behavior: 'smooth',
+      });
+    } else if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth',
+      });
+    }
+  }, [selectedVoicingIndex, availableVoicings, chordData]);
   
 const parseChordSequence = useCallback((sequence: string): ChordWithStrum[] => {
   console.log("Parsing sequence:", sequence);
@@ -896,7 +957,7 @@ const renderString = (index: number) => (
 		
 		{/* Persistent section */}
 		<div style={{ marginBottom: '20px' }}>
-          <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+          <div ref={scrollContainerRef} style={{ overflowX: 'auto', maxWidth: '100%' }}>
             {renderFretboard()}
           </div>
 		  <div>
