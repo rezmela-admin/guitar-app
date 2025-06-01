@@ -1,4 +1,4 @@
-import { ChordPosition } from '../types'; // Import ChordPosition
+import { ChordPosition } from './types'; // Import ChordPosition
 
 // Local type aliases FretPosition, ChordShape, ReadonlyChordShape removed
 
