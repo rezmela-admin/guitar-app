@@ -34,10 +34,10 @@ const GuitarChordApp: React.FC = () => {
   // Updated or new state variables
   const [playStyle, setPlayStyle] = useState<'strum' | 'arpeggio'>('arpeggio');
   const [bassDampening, setBassDampening] = useState(0.7);
-  const [attackTime, setAttackTime] = useState(0.028);
-  const [decayTime, setDecayTime] = useState(2.0);
-  const [sustainLevel, setSustainLevel] = useState(0.55);
-  const [releaseTime, setReleaseTime] = useState(5.0);
+  const [attackTime, setAttackTime] = useState(0.01);
+  const [decayTime, setDecayTime] = useState(0.15);
+  const [sustainLevel, setSustainLevel] = useState(0.2);
+  const [releaseTime, setReleaseTime] = useState(0.3);
   const [isChordPlaying, setIsChordPlaying] = useState(false);
   const [chordPlaySpeed, setChordPlaySpeed] = useState(11);
   const [duration, setDuration] = useState(495);
