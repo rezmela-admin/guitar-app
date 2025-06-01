@@ -1,42 +1,40 @@
-/**
- * Represents the fret position on a guitar string.
- * 'x' denotes a muted string, a number denotes a fret.
- */
-type FretPosition = number | 'x';
+import { ChordPosition } from '../types'; // Import ChordPosition
 
-/**
- * Represents the fingering positions for a chord on a guitar.
- * Each element in the array corresponds to a string, typically from low E to high E.
- */
-type ChordShape = FretPosition[];
-type ReadonlyChordShape = ReadonlyArray<FretPosition>;
+// Local type aliases FretPosition, ChordShape, ReadonlyChordShape removed
 
 /**
  * Transposes a base chord shape by a given fret offset.
  *
- * @param baseShape - An array representing the base chord positions (e.g., `['x', 0, 2, 2, 1, 0]` for E major).
- *                    'x' means muted, a number is a fret relative to the nut or a capo if the base shape is already capoed.
+ * @param baseShape - An array representing the base chord positions (e.g., `[-1, 0, 2, 2, 1, 0]` for E major, where -1 is muted).
  * @param fretOffset - The number of frets to shift the shape up by.
  * @returns A new array representing the transposed shape.
- *          Example: `transposeShape(['x', 0, 2, 2, 1, 0], 3)` for E major shape at 3rd fret (G major)
- *          should result in `['x', 3, 5, 5, 4, 3]`.
+ *          Example: `transposeShape([-1, 0, 2, 2, 1, 0], 3)` for E major shape at 3rd fret (G major)
+ *          should result in `[-1, 3, 5, 5, 4, 3]`.
  */
-export function transposeShape(baseShape: ReadonlyChordShape, fretOffset: number): ChordShape {
+export function transposeShape(
+  baseShape: Readonly<ChordPosition>,
+  fretOffset: number
+): ChordPosition {
   if (fretOffset < 0) {
-    // Or throw an error, depending on desired behavior for negative offsets
-    console.warn("transposeShape called with negative fretOffset. Shapes can only be moved up the fretboard.");
-    return [...baseShape];
+    console.warn("transposeShape: fretOffset cannot be negative. Returning base shape.");
+    // Ensure a copy is returned that matches the ChordPosition tuple type
+    return [...baseShape] as ChordPosition;
   }
   if (fretOffset === 0) {
-    return [...baseShape];
+    // Ensure a copy is returned that matches the ChordPosition tuple type
+    return [...baseShape] as ChordPosition;
   }
 
-  return baseShape.map(fret => {
-    if (typeof fret === 'number') {
-      return fret + fretOffset;
+  const transposed = baseShape.map(fret => {
+    if (fret === -1) { // Muted string
+      return -1;
     }
-    return fret; // 'x' remains 'x'
+    // For actual fretted notes (>= 0 in base shape), add the offset.
+    // Open strings (0) become the barre fret.
+    return fret + fretOffset;
   });
+  // Ensure the return type is correctly cast or inferred as the tuple
+  return transposed as ChordPosition;
 }
 
 /**
@@ -63,8 +61,8 @@ export interface BarreInfo {
  * @returns An object with `barreFret`, `startString` (index), and `endString` (index) if a barre is formed.
  *          Returns `null` if no barre is formed by at least two strings at `fretOffset`.
  */
-export function getBarreInfo(transposedShape: ReadonlyChordShape, fretOffset: number): BarreInfo | null {
-  if (fretOffset <= 0) { // Barres are typically not at or below the nut unless it's a specific technique not covered here.
+export function getBarreInfo(transposedShape: Readonly<ChordPosition>, fretOffset: number): BarreInfo | null {
+  if (fretOffset <= 0) { // Barres are typically not at or below the nut.
     return null;
   }
 

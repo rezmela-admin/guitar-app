@@ -8,12 +8,12 @@ export interface CagedShapeData {
 
 export const CAGED_SHAPES: Record<string, CagedShapeData> = {
   C: {
-    shape: ['x', 3, 2, 0, 1, 0], // Standard Open C shape. Assumes x32010.
+    shape: [-1, 3, 2, 0, 1, 0], // Standard Open C shape. Assumes x32010.
     rootStrings: [1],           // A string (C note at 3rd fret of A string) is often the reference for the movable C-shape barre chord.
     baseRootNote: 'C',
   },
   A: {
-    shape: ['x', 0, 2, 2, 2, 0], // Standard Open A shape. Assumes x02220.
+    shape: [-1, 0, 2, 2, 2, 0], // Standard Open A shape. Assumes x02220.
     rootStrings: [1],           // A string (open A) is the reference for the movable A-shape barre chord.
     baseRootNote: 'A',
   },
@@ -28,7 +28,7 @@ export const CAGED_SHAPES: Record<string, CagedShapeData> = {
     baseRootNote: 'E',
   },
   D: {
-    shape: ['x', 'x', 0, 2, 3, 2], // Standard Open D shape. Assumes xx0232.
+    shape: [-1, -1, 0, 2, 3, 2], // Standard Open D shape. Assumes xx0232.
     rootStrings: [2],           // D string (open D) is the reference for the movable D-shape barre chord.
     baseRootNote: 'D',
   },
