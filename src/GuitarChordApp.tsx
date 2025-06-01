@@ -379,7 +379,7 @@ const playChord = useCallback((
 		setRootNote(root);
 		setChordType(type);
 		setCurrentChordIndex(index);
-		updateChordData(root, type);
+		updateChordData(root, type, [], 0); // Pass empty voicings and default index for sequence chords
 		const strumInterval = 1000 / (chordPlaySpeed / 50); // Time between strums
 		let totalDuration = 0;
 
