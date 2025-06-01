@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types';
 import { transposeShape, getBarreInfo } from './transpose'; // Added getBarreInfo
 import { CAGED_SHAPES } from './cagedShapes';
@@ -752,38 +751,36 @@ const renderFretboard = useCallback(() => {
   // Determine the shape to display based on selected voicing or fallback
   let displayPositions: ChordPosition;
   let currentFretOffset = 0; // For barre calculation
+  let activeChordDataToUse = chordData; // Default to current global chordData
 
   if (chordType === 'major' && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
     const currentVoicing = availableVoicings[selectedVoicingIndex];
     displayPositions = currentVoicing.displayShape;
     currentFretOffset = currentVoicing.fretOffset;
+    // Re-generate chordData specifically for this display, ensuring it matches the voicing
+    activeChordDataToUse = displayPositions.map((pos, index) => {
+        const stringNumber = 6 - index;
+        const stringTune = STRING_TUNING[index];
+        const noteVal = typeof pos === 'number' && pos >= 0 ? getNote(stringTune, pos) : 'X';
+        return {
+            stringNumber,
+            position: typeof pos === 'number' ? pos : -1,
+            note: noteVal,
+            displayText: showFunction && noteVal !== 'X' ? getChordFunction(noteVal, rootNote, chordType) : noteVal,
+            isRootNote: noteVal === rootNote,
+            midiNote: typeof pos === 'number' && pos >= 0 ? getMidiNoteFromPosition(stringNumber, pos) : null,
+            noteName: typeof pos === 'number' && pos >= 0 && getMidiNoteFromPosition(stringNumber, pos) !== null ? midiToNote(getMidiNoteFromPosition(stringNumber, pos)!) : 'X',
+        };
+    });
   } else {
+    // This case uses the existing global chordData which is derived from chordPositions[rootNote][chordType]
+    // Ensure displayPositions reflects this for barreInfo calculation if needed, though barreInfo is mainly for CAGED.
     displayPositions = chordPositions[rootNote]?.[chordType] ?? chordPositions.C.major;
+    // activeChordDataToUse remains global chordData
   }
 
   const barreInfo = (chordType === 'major' && currentFretOffset > 0 && displayPositions) ?
                     getBarreInfo(displayPositions, currentFretOffset) : null;
-
-  // Data preparation for notes
-  const localChordData = displayPositions.map((pos, index) => {
-    const stringNumber = 6 - index; // 6 for low E, 1 for high E
-    const stringNote = STRING_TUNING[index];
-    const note = typeof pos === 'number' && pos >= 0 ? getNote(stringNote, pos) : 'X';
-    const displayText = showFunction && note !== 'X' ? getChordFunction(note, rootNote, chordType) : note;
-    const isRoot = note === rootNote;
-    const midi = typeof pos === 'number' && pos >= 0 ? getMidiNoteFromPosition(stringNumber, pos) : null;
-    const noteNameDisplay = midi !== null ? midiToNote(midi) : 'X';
-
-    return {
-      stringNumber,
-      position: typeof pos === 'number' ? pos : -1,
-      note,
-      displayText,
-      isRootNote: isRoot,
-      midiNote: midi,
-      noteName: noteNameDisplay,
-    };
-  });
 
   // Mapping logic (Controller)
 	const mapDataToVisual = (data: ChordDataItem, visualIndex: number) => {
@@ -833,7 +830,7 @@ const renderString = (index: number) => (
       {[0, 1, 2, 3, 4, 5].map(renderString)}
       
       {/* Barre Line - Draw before finger positions */}
-      {barreInfo && barreInfo.barreFret > 0 && (
+      {barreInfo && ( // barreInfo.barreFret > 0 is implicitly handled by getBarreInfo returning null if offset <=0
         <line
           key="barre-line"
           x1={20 + barreInfo.barreFret * 100 - 50}
@@ -850,7 +847,7 @@ const renderString = (index: number) => (
       {STRING_TUNING.slice().reverse().map(renderStringLabel)}
       
       {/* Finger positions */}
-      {localChordData.map((data, index) => mapDataToVisual(data, 5 - index))}
+      {activeChordDataToUse.map((data, index) => mapDataToVisual(data, 5 - index))}
       
       {/* Fret numbers */}
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((fret) => ( // Extended to 12 frets
@@ -866,10 +863,10 @@ const renderString = (index: number) => (
           {fret}
         </text>
       ))}
-	  <AnimationLayer chordData={localChordData} animations={animations}/>
+	  <AnimationLayer chordData={activeChordDataToUse} animations={animations}/>
     </svg>
   );
-}, [rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations, availableVoicings, selectedVoicingIndex]);
+}, [rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations, availableVoicings, selectedVoicingIndex, chordData]); // Added chordData
 
 
 	 if (isLoading) {
