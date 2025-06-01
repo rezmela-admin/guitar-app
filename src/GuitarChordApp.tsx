@@ -1,16 +1,17 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types'; // Removed noteToMidi
-import { transposeShape } from './transpose';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types';
+import { transposeShape, getBarreInfo } from './transpose'; // Added getBarreInfo
+import { CAGED_SHAPES } from './cagedShapes';
+import { getCagedVoicings, VoicingInfo } from './voicingUtils';
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
 import { PlayIcon, PauseIcon, StepBackwardIcon, StepForwardIcon, RepeatIcon, StopIcon,SkipToStartIcon, SkipToEndIcon, MusicalSymbolIcon } from './IconComponents';
-import SequenceEditor from './SequenceEditor'; 
+import SequenceEditor from './SequenceEditor';
 import SoundControls from './SoundControls';
 import { introTexts } from './appIntroTexts';
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
-
-// Removed SoundControlsProps, ChordBrowserProps, AnimatingNote interfaces
 
 const GuitarChordApp: React.FC = () => {
 
@@ -26,8 +27,9 @@ const GuitarChordApp: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
-  // const [currentVoicingOffset, setCurrentVoicingOffset] = useState(0); // Removed
-  const [selectedGShape, setSelectedGShape] = useState<'E-shape' | 'A-shape'>('E-shape');
+  // const [selectedGShape, setSelectedGShape] = useState<'E-shape' | 'A-shape'>('E-shape'); // Removed
+  const [availableVoicings, setAvailableVoicings] = useState<VoicingInfo[]>([]); // Added
+  const [selectedVoicingIndex, setSelectedVoicingIndex] = useState<number>(0); // Added
 
   // Updated or new state variables
   const [playStyle, setPlayStyle] = useState<'strum' | 'arpeggio'>('arpeggio');
@@ -100,20 +102,16 @@ const playAudioNoteWithAnimation = useCallback((
 	   initializeAudio();
 	   }, [initializeAudio]);
 	   
-  // Function to update chordData based on rootNote and chordType
-  const updateChordData = useCallback((root: RootNote, type: ChordType) => {
+  // Function to update chordData based on rootNote, chordType, available voicings and selected index
+  const updateChordData = useCallback((root: RootNote, type: ChordType, currentVoicings: VoicingInfo[], currentIndex: number) => {
     let shapeToUse: ChordPosition;
 
-    if (root === 'G' && type === 'major') {
-      if (selectedGShape === 'E-shape') {
-        const baseShape = chordPositions.E.major; // [0, 2, 2, 1, 0, 0]
-        shapeToUse = transposeShape(baseShape, 3) as ChordPosition; // G: [3, 5, 5, 4, 3, 3]
-      } else { // A-shape
-        const baseShape = chordPositions.A.major; // ['x', 0, 2, 2, 2, 0]
-        shapeToUse = transposeShape(baseShape, 10) as ChordPosition; // G: ['x', 10, 12, 12, 12, 10]
-      }
+    if (currentVoicings.length > 0 && currentIndex < currentVoicings.length) {
+      const currentVoicing = currentVoicings[currentIndex];
+      shapeToUse = currentVoicing.displayShape;
     } else {
-      shapeToUse = chordPositions[root]?.[type] ?? chordPositions.C.major; // Fallback
+      // Fallback if no CAGED voicings (e.g. for minor chords) or index issue
+      shapeToUse = chordPositions[root]?.[type] ?? chordPositions.C.major;
     }
 
     const newChordData: ChordDataItem[] = shapeToUse.map((position, index) => {
@@ -139,13 +137,18 @@ const playAudioNoteWithAnimation = useCallback((
     });
     console.log('Updated chord data:', newChordData);
     setChordData(newChordData);
-  }, [getNote, selectedGShape]); // Removed midiToNote (stable import)
+  }, [getNote]); // midiToNote is stable if imported, selectedGShape removed
   
-  // Update chordData when rootNote or chordType or selectedGShape changes
+  // Update availableVoicings and chordData when rootNote or chordType changes
   useEffect(() => {
-    updateChordData(rootNote, chordType);
+    const newVoicings = getCagedVoicings(rootNote, chordType);
+    setAvailableVoicings(newVoicings);
+    const newIndex = 0;
+    setSelectedVoicingIndex(newIndex);
+
+    updateChordData(rootNote, chordType, newVoicings, newIndex);
     resetAnimations(setAnimations);
-  }, [rootNote, chordType, updateChordData, selectedGShape]);
+  }, [rootNote, chordType, updateChordData]); // updateChordData must be stable
   
 const parseChordSequence = useCallback((sequence: string): ChordWithStrum[] => {
   console.log("Parsing sequence:", sequence);
@@ -241,16 +244,12 @@ const playChord = useCallback((
   console.log(`Playing ${root} ${type} chord as ${actualStyle} with pattern ${strumPattern}`);
 
   let shapeToPlay: ChordPosition;
-  if (root === 'G' && type === 'major') {
-    if (selectedGShape === 'E-shape') {
-      const baseShape = chordPositions.E.major;
-      shapeToPlay = transposeShape(baseShape, 3) as ChordPosition;
-    } else { // A-shape
-      const baseShape = chordPositions.A.major;
-      shapeToPlay = transposeShape(baseShape, 10) as ChordPosition;
-    }
+  // Check if the chord being played is the currently displayed global chord with available voicings
+  if (root === rootNote && type === chordType && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
+    shapeToPlay = availableVoicings[selectedVoicingIndex].displayShape;
   } else {
-    shapeToPlay = chordPositions[root]?.[type] ?? chordPositions.C.major; // Fallback
+    // Fallback for chords from sequence player or if no CAGED voicings for current global chord
+    shapeToPlay = chordPositions[root]?.[type] ?? chordPositions.C.major;
   }
   
   const speedMultiplier = 0.5 + (actualChordPlaySpeed / 100);
@@ -322,7 +321,12 @@ const playChord = useCallback((
   playAudioNoteWithAnimation,
   // chordPositions,
   // getMidiNoteFromPosition, // Removed (stable import)
-  selectedGShape
+  // selectedGShape, // Removed as the state variable itself is removed
+  // Dependencies for when current global chord is played with its selected voicing:
+  availableVoicings,
+  selectedVoicingIndex,
+  rootNote, // global rootNote
+  chordType // global chordType
 ]);
 
 	// Removed unused handleChordChange useCallback
@@ -629,15 +633,40 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
 
   // Correct the finger assignment
   const stringIndex = 5 - visualIndex; // Reverse the index to match the chord data array (0 for low E, 5 for high E)
+  const currentFretForString = data.position; // Actual fret of the note on this string for the current voicing
 
-  let fingerLetter: string | number;
-  if (rootNote === 'G' && chordType === 'major') {
-    if (selectedGShape === 'E-shape') {
-      fingerLetter = chordFingerData.E?.major?.[stringIndex] ?? '0';
-    } else { // A-shape
-      fingerLetter = chordFingerData.A?.major?.[stringIndex] ?? '0';
+  let fingerLetter: string | number = '0';
+
+  if (chordType === 'major' && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
+    const currentVoicing = availableVoicings[selectedVoicingIndex];
+    const baseShapeName = currentVoicing.shapeName;
+    const fretOffset = currentVoicing.fretOffset;
+    const originalShapeRoot = CAGED_SHAPES[baseShapeName]?.baseRootNote;
+
+    if (originalShapeRoot) {
+      const baseFingeringForString = chordFingerData[originalShapeRoot as RootNote]?.major?.[stringIndex] ?? '0';
+
+      if ((baseShapeName === 'E' || baseShapeName === 'A') && fretOffset > 0) {
+        if (currentFretForString === fretOffset) {
+          fingerLetter = 'i'; // Part of the barre
+        } else if (typeof baseFingeringForString === 'string' && baseFingeringForString !== '0' && currentFretForString > fretOffset) {
+          // Note is fretted higher than the barre, use original non-open finger from base shape
+          fingerLetter = baseFingeringForString;
+        } else if (currentFretForString === -1) { // Muted string
+          fingerLetter = '0'; // Maps to unused/muted color
+        } else {
+          // Default for open strings in base shape now above barre, or other complex cases
+          fingerLetter = '0';
+        }
+      } else {
+        // For G, C, D shapes, or E/A shapes in open position (fretOffset === 0)
+        fingerLetter = baseFingeringForString;
+      }
+    } else {
+      fingerLetter = '0'; // Fallback if originalShapeRoot is somehow undefined
     }
   } else {
+    // Fallback for non-major chords or if no CAGED voicings are determined
     fingerLetter = chordFingerData[rootNote]?.[chordType]?.[stringIndex] ?? '0';
   }
 
@@ -689,7 +718,7 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
       </text>
     );
   }
-}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType, selectedGShape]); // Added selectedGShape
+	}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType, availableVoicings, selectedVoicingIndex]);
 
 const FingerLegend: React.FC = () => {
   const legendItems = [
@@ -720,31 +749,44 @@ const FingerLegend: React.FC = () => {
 };
 
 const renderFretboard = useCallback(() => {
-  const positions: ChordPosition = chordPositions[rootNote][chordType];
+  // Determine the shape to display based on selected voicing or fallback
+  let displayPositions: ChordPosition;
+  let currentFretOffset = 0; // For barre calculation
 
-  // Data preparation (Model)
-	  const chordData = positions.map((position, index) => {
-		const stringNumber = 6 - index; // 6 for low E, 1 for high E
-		const stringNote = STRING_TUNING[index];
-		const note = position >= 0 ? getNote(stringNote, position) : 'X';
-		const displayText = showFunction && note !== 'X' ? getChordFunction(note, rootNote, chordType) : note;
-		const isRootNote = note === rootNote;
-		const midiNote = position >= 0 ? getMidiNoteFromPosition(stringNumber, position) : null;
-		const noteName = midiNote !== null ? midiToNote(midiNote) : 'X';
+  if (chordType === 'major' && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
+    const currentVoicing = availableVoicings[selectedVoicingIndex];
+    displayPositions = currentVoicing.displayShape;
+    currentFretOffset = currentVoicing.fretOffset;
+  } else {
+    displayPositions = chordPositions[rootNote]?.[chordType] ?? chordPositions.C.major;
+  }
 
-		return {
-		  stringNumber,
-		  position,
-		  note,
-		  displayText,
-		  isRootNote,
-		  midiNote,
-		  noteName
-		};
-	  });
+  const barreInfo = (chordType === 'major' && currentFretOffset > 0 && displayPositions) ?
+                    getBarreInfo(displayPositions, currentFretOffset) : null;
+
+  // Data preparation for notes
+  const localChordData = displayPositions.map((pos, index) => {
+    const stringNumber = 6 - index; // 6 for low E, 1 for high E
+    const stringNote = STRING_TUNING[index];
+    const note = typeof pos === 'number' && pos >= 0 ? getNote(stringNote, pos) : 'X';
+    const displayText = showFunction && note !== 'X' ? getChordFunction(note, rootNote, chordType) : note;
+    const isRoot = note === rootNote;
+    const midi = typeof pos === 'number' && pos >= 0 ? getMidiNoteFromPosition(stringNumber, pos) : null;
+    const noteNameDisplay = midi !== null ? midiToNote(midi) : 'X';
+
+    return {
+      stringNumber,
+      position: typeof pos === 'number' ? pos : -1,
+      note,
+      displayText,
+      isRootNote: isRoot,
+      midiNote: midi,
+      noteName: noteNameDisplay,
+    };
+  });
 
   // Mapping logic (Controller)
-	const mapDataToVisual = (data: typeof chordData[0], visualIndex: number) => {
+	const mapDataToVisual = (data: ChordDataItem, visualIndex: number) => {
 	  return renderNotePosition(data, visualIndex, data.stringNumber);
 	};
 
@@ -790,11 +832,25 @@ const renderString = (index: number) => (
       {/* Strings */}
       {[0, 1, 2, 3, 4, 5].map(renderString)}
       
+      {/* Barre Line - Draw before finger positions */}
+      {barreInfo && barreInfo.barreFret > 0 && (
+        <line
+          key="barre-line"
+          x1={20 + barreInfo.barreFret * 100 - 50}
+          y1={40 + barreInfo.startString * 30}
+          x2={20 + barreInfo.barreFret * 100 - 50}
+          y2={40 + barreInfo.endString * 30}
+          stroke={fingerColors[1]} // Use index finger color for barre
+          strokeWidth="18"
+          strokeLinecap="round"
+        />
+      )}
+
       {/* String labels */}
       {STRING_TUNING.slice().reverse().map(renderStringLabel)}
       
       {/* Finger positions */}
-      {chordData.map((data, index) => mapDataToVisual(data, 5 - index))}
+      {localChordData.map((data, index) => mapDataToVisual(data, 5 - index))}
       
       {/* Fret numbers */}
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((fret) => ( // Extended to 12 frets
@@ -810,10 +866,10 @@ const renderString = (index: number) => (
           {fret}
         </text>
       ))}
-	  <AnimationLayer chordData={chordData} animations={animations}/>
+	  <AnimationLayer chordData={localChordData} animations={animations}/>
     </svg>
   );
-}, [rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations]); // Removed chordPositions, STRING_TUNING, getMidiNoteFromPosition, midiToNote (stable imports/globals)
+}, [rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations, availableVoicings, selectedVoicingIndex]);
 
 
 	 if (isLoading) {
@@ -856,22 +912,21 @@ const renderString = (index: number) => (
 			  Show Chord Function
 			</label>
 		  </div>
-          {rootNote === 'G' && chordType === 'major' && (
+          {availableVoicings.length > 0 && chordType === 'major' && ( // Only show for major chords with CAGED voicings
             <div style={{ marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
-              <button
-                onClick={() => setSelectedGShape('E-shape')}
-                disabled={selectedGShape === 'E-shape'}
-                style={{ marginRight: '5px' }}
-              >
-                G (E-shape at 3rd fret)
-              </button>
-              <button
-                onClick={() => setSelectedGShape('A-shape')}
-                disabled={selectedGShape === 'A-shape'}
-                style={{ marginLeft: '5px' }}
-              >
-                G (A-shape at 10th fret)
-              </button>
+              Voicings:
+              {availableVoicings.map((voicing, index) => (
+                <button
+                  key={`${voicing.shapeName}-${voicing.fretOffset}`}
+                  onClick={() => setSelectedVoicingIndex(index)}
+                  disabled={index === selectedVoicingIndex}
+                  style={{ marginLeft: '5px',
+                           backgroundColor: index === selectedVoicingIndex ? '#ddd' : '#fff' }}
+                  title={`Plays at fret ${voicing.fretOffset +1}`}
+                >
+                  {voicing.shapeName}-shape (Fret {voicing.fretOffset})
+                </button>
+              ))}
             </div>
           )}
 		  	  <FingerLegend />
