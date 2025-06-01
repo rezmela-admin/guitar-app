@@ -361,7 +361,6 @@ const playChord = useCallback((
 			setIsPaused(false);
 			setCurrentChordIndex(0);
 			setRemainingChords([]);
-			// setElapsedTime(0); // Removed
 			setShouldStopAtEnd(false);  // Reset the flag
 			const firstChord = chords[0];
 			if (firstChord) {
@@ -391,7 +390,6 @@ const playChord = useCallback((
 			}, strumDuration);
 		  } else {
 			// Move to next chord
-			// setElapsedTime(0); // Removed
 			setRemainingChords(chords.slice(index + 1));
 			
 			// Schedule the next chord
@@ -403,15 +401,12 @@ const playChord = useCallback((
 
 		// Start playing strums
 		playStrum(0);
-
-		// Removed setInterval block for elapsedTime
 	  };
 
 	  playNextChord(startIndex);
 
 	  return () => {
 		if (timerRef.current) clearTimeout(timerRef.current);
-		// if (intervalRef.current) clearInterval(intervalRef.current); // Removed
 	  };
 	}, [
 	  chordSequence,
@@ -434,10 +429,8 @@ const playChord = useCallback((
 	  currentChordIndex,
 	  remainingChords,
 	  setRemainingChords,
-	  // setElapsedTime, // Removed
 	  setShouldStopAtEnd,
 	  timerRef,
-	  // intervalRef, // Removed
 	  isPaused,
 	  updateChordData,
 	]);
@@ -446,9 +439,6 @@ const playChord = useCallback((
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    // if (intervalRef.current) { // Removed
-    //   clearInterval(intervalRef.current);
-    // }
     setIsPaused(true);
     setIsPlaying(false);
   }, []);
@@ -458,14 +448,10 @@ const stopSequence = useCallback(() => {
   if (timerRef.current) {
     clearTimeout(timerRef.current);
   }
-  // if (intervalRef.current) { // Removed
-  //  clearInterval(intervalRef.current);
-  // }
   setIsPlaying(false);
   setIsPaused(false);
   setCurrentChordIndex(0);
   setRemainingChords([]);
-  // setElapsedTime(0); // Removed
 
   // Reset to the first chord
   const firstChord = parseChordSequence(chordSequence)[0];
@@ -483,7 +469,6 @@ const stopSequence = useCallback(() => {
       playSequence();
     } else {
       setRemainingChords([]);
-      // setElapsedTime(0); // Removed
 	  setCurrentChordIndex(0); 
       playSequence();
     }
@@ -858,7 +843,9 @@ const renderString = (index: number) => (
 		
 		{/* Persistent section */}
 		<div style={{ marginBottom: '20px' }}>
-		  {renderFretboard()}
+          <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+            {renderFretboard()}
+          </div>
 		  <div>
 			<label>
 			  <input
