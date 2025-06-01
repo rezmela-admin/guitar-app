@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ChordDataItem, RootNote, ChordType, Note, ChordPosition, STRING_TUNING, NOTE_SEQUENCE, chordPositions, CHORD_TYPE_LABELS, getMidiNoteFromPosition, midiToNote, StrumPattern,StrumDirection,ChordWithStrum } from './types';
-import { transposeShape, getBarreInfo } from './transpose'; // Added getBarreInfo
+import { getBarreInfo } from './transpose'; // Removed transposeShape
 import { CAGED_SHAPES } from './cagedShapes';
 import { getCagedVoicings, VoicingInfo } from './voicingUtils';
 import ChordBrowser from './ChordBrowser';
