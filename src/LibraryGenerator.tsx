@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KEYS, Note, NOTE_SEQUENCE } from './types';
+import { KEYS } from './types';
 import stockSongs from './stockSongs.json';
 import { chordProgressions } from './sequenceFormulas';
 

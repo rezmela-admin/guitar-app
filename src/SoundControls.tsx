@@ -34,6 +34,10 @@ interface SoundControlsProps {
   setChordPlaySpeed: React.Dispatch<React.SetStateAction<number>>;
   duration: number;
   setDuration: React.Dispatch<React.SetStateAction<number>>;
+  reverbSendLevel: number;
+  setReverbSendLevel: React.Dispatch<React.SetStateAction<number>>;
+  reverbOutputLevel: number;
+  setReverbOutputLevel: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const SoundControls: React.FC<SoundControlsProps> = ({
@@ -54,7 +58,11 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   chordPlaySpeed,
   setChordPlaySpeed,
   duration,
-  setDuration
+  setDuration,
+  reverbSendLevel,
+  setReverbSendLevel,
+  reverbOutputLevel,
+  setReverbOutputLevel,
 }) => {
   return (
     <div className="sound-controls">
@@ -182,6 +190,36 @@ const SoundControls: React.FC<SoundControlsProps> = ({
             onChange={(e) => setDuration(Number(e.target.value))} 
           />
           {duration} ms
+        </label>
+      </div>
+
+      <h4>Reverb Controls</h4>
+      <div className="control-group">
+        <label>
+          Reverb Send:
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value={reverbSendLevel} 
+            onChange={(e) => setReverbSendLevel(parseFloat(e.target.value))} 
+          />
+          {Math.round(reverbSendLevel * 100)}%
+        </label>
+      </div>
+      <div className="control-group">
+        <label>
+          Reverb Output:
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value={reverbOutputLevel} 
+            onChange={(e) => setReverbOutputLevel(parseFloat(e.target.value))} 
+          />
+          {Math.round(reverbOutputLevel * 100)}%
         </label>
       </div>
     </div>
