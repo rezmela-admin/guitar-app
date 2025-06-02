@@ -510,7 +510,7 @@ const playChord = useCallback((
 	  setShouldStopAtEnd,
 	  timerRef,
 	  isPaused,
-	  updateChordData,
+	  // updateChordData, // Removed as per ESLint warning (indirectly called via setRootNote/setChordType)
 	]);
 
   const pauseSequence = useCallback(() => {
