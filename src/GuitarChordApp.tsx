@@ -5,14 +5,15 @@ import { CAGED_SHAPES } from './cagedShapes';
 import { getCagedVoicings, VoicingInfo } from './voicingUtils'; 
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
-import { PlayIcon, PauseIcon, StepBackwardIcon, StepForwardIcon, RepeatIcon, StopIcon,SkipToStartIcon, SkipToEndIcon, MusicalSymbolIcon } from './IconComponents';
+// Step/Skip icons removed as they are now in AdvancedPlaybackControls.tsx
+import { PlayIcon, PauseIcon, RepeatIcon, StopIcon, MusicalSymbolIcon } from './IconComponents'; 
 // import SequenceEditor from './SequenceEditor'; // Old editor, to be removed
 import ManualSequenceEditor from './ManualSequenceEditor'; // New
 import SequenceFeatures from './SequenceFeatures'; // New
 import AdvancedPlaybackControls from './AdvancedPlaybackControls'; // New
 import SoundControls from './SoundControls';
 import Modal from './Modal'; // Import the Modal component
-import { introTexts } from './appIntroTexts';
+// import { introTexts } from './appIntroTexts'; // Removed as no longer used directly in this component
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
 
@@ -670,11 +671,12 @@ const handleSkipToEnd = () => {
     return `${rootNote}${typeLabel === 'major' ? '' : typeLabel}`;
   };
   
-  const handleChordSequenceChange = (newSequence: string | ((prevState: string) => string)) => {
-    setChordSequence(newSequence);
-    // If you need to perform any additional actions when the sequence changes,
-    // you can do so here
-  };
+// Removed unused handleChordSequenceChange function
+// const handleChordSequenceChange = (newSequence: string | ((prevState: string) => string)) => {
+//   setChordSequence(newSequence);
+//   // If you need to perform any additional actions when the sequence changes,
+//   // you can do so here
+// };
 
 const renderCurrentInfo = () => {
   if (chordSequence) { // Always try to display the sequence text
