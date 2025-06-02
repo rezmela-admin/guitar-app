@@ -6,8 +6,12 @@ import { getCagedVoicings, VoicingInfo } from './voicingUtils';
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
 import { PlayIcon, PauseIcon, StepBackwardIcon, StepForwardIcon, RepeatIcon, StopIcon,SkipToStartIcon, SkipToEndIcon, MusicalSymbolIcon } from './IconComponents';
-import SequenceEditor from './SequenceEditor';
+// import SequenceEditor from './SequenceEditor'; // Old editor, to be removed
+import ManualSequenceEditor from './ManualSequenceEditor'; // New
+import SequenceFeatures from './SequenceFeatures'; // New
+import AdvancedPlaybackControls from './AdvancedPlaybackControls'; // New
 import SoundControls from './SoundControls';
+import Modal from './Modal'; // Import the Modal component
 import { introTexts } from './appIntroTexts';
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
@@ -18,7 +22,7 @@ const GuitarChordApp: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null); // Added
   const [showFunction, setShowFunction] = useState(false);
   const [volume, setVolume] = useState(0.5); // Initialize volume to half max.
-  const [activeTab, setActiveTab] = useState<'browser' | 'sequence' | 'sound'>('browser');
+  // const [activeTab, setActiveTab] = useState<'browser' | 'sequence'>('browser'); // Removed 'sound' tab - Now removing entirely
   // Existing state variables
   const [rootNote, setRootNote] = useState<RootNote>('D');
   const [chordType, setChordType] = useState<ChordType>('major');
@@ -31,6 +35,13 @@ const GuitarChordApp: React.FC = () => {
   // const [selectedGShape, setSelectedGShape] = useState<'E-shape' | 'A-shape'>('E-shape'); // Removed
   const [availableVoicings, setAvailableVoicings] = useState<VoicingInfo[]>([]); // Added
   const [selectedVoicingIndex, setSelectedVoicingIndex] = useState<number>(0); // Added
+
+  // Modal visibility states
+  const [showChordBrowserModal, setShowChordBrowserModal] = useState(false);
+  const [showSequenceEditorModal, setShowSequenceEditorModal] = useState(false);
+  const [showGetSequencesModal, setShowGetSequencesModal] = useState(false);
+  const [showSoundSettingsModal, setShowSoundSettingsModal] = useState(false);
+  const [showAdvancedPlaybackModal, setShowAdvancedPlaybackModal] = useState(false); // Optional for now
 
   // Updated or new state variables
   const [playStyle, setPlayStyle] = useState<'strum' | 'arpeggio'>('arpeggio');
@@ -1050,13 +1061,7 @@ const renderString = (index: number) => (
 		  {renderCurrentInfo()}
 			  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
 				<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-
-				  <button onClick={handleSkipToStart} disabled={isPlaying} style={iconButtonStyle}>
-					<SkipToStartIcon />
-				  </button>
-				  <button onClick={handleStepBackward} disabled={isPlaying} style={iconButtonStyle}>
-					<StepBackwardIcon />
-				  </button>
+                  {/* Minimal Playback Controls - Step/Skip buttons moved to modal */}
 				  <button 
 					onClick={handlePlayPause} 
 					style={{ ...iconButtonStyle, padding: '10px' }}
@@ -1068,12 +1073,6 @@ const renderString = (index: number) => (
 					style={{ ...iconButtonStyle, padding: '10px' }}
 				  >
 					<StopIcon />
-				  </button>
-				  <button onClick={handleStepForward} disabled={isPlaying} style={iconButtonStyle}>
-					<StepForwardIcon />
-				  </button>
-				  <button onClick={handleSkipToEnd} disabled={isPlaying} style={iconButtonStyle}>
-						<SkipToEndIcon />
 				  </button>
 				  <button 
 					  onClick={handlePlayCurrentChord}
@@ -1101,102 +1100,95 @@ const renderString = (index: number) => (
 			  </div>
 		</div>
 
-		{/* Tab buttons */}
-		<div style={{ display: 'flex', borderBottom: '1px solid #ccc', marginBottom: '20px' }}>
-		  <button 
-			onClick={() => setActiveTab('browser')} 
-			style={{
-			  padding: '10px 20px',
-			  backgroundColor: activeTab === 'browser' ? '#f0f0f0' : 'white',
-			  border: 'none',
-			  borderBottom: activeTab === 'browser' ? '2px solid #333' : 'none',
-			  cursor: 'pointer'
-			}}
-		  >
-			Chord Browser
-		  </button>
-        <button 
-          onClick={() => setActiveTab('sequence')} 
-          style={{
-            padding: '10px 20px',
-            backgroundColor: activeTab === 'sequence' ? '#f0f0f0' : 'white',
-            border: 'none',
-            borderBottom: activeTab === 'sequence' ? '2px solid #333' : 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Sequence Editor
-        </button>
-		<button 
-			onClick={() => setActiveTab('sound')} 
-			style={{
-			  padding: '10px 20px',
-			  backgroundColor: activeTab === 'sound' ? '#f0f0f0' : 'white',
-			  border: 'none',
-			  borderBottom: activeTab === 'sound' ? '2px solid #333' : 'none',
-			  cursor: 'pointer'
-			}}
-		  >
-			Sound Controls
-		  </button>
+		{/* New Modal Trigger Buttons */}
+		<div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '20px', flexWrap: 'wrap' }}>
+		  <button onClick={() => setShowChordBrowserModal(true)} style={modalButtonStyle}>Browse Chords</button>
+		  <button onClick={() => setShowSequenceEditorModal(true)} style={modalButtonStyle}>Edit Sequence</button>
+		  <button onClick={() => setShowGetSequencesModal(true)} style={modalButtonStyle}>Load/Generate Sequence</button>
+		  <button onClick={() => setShowSoundSettingsModal(true)} style={modalButtonStyle}>Sound Settings</button>
+		  <button onClick={() => setShowAdvancedPlaybackModal(true)} style={modalButtonStyle}>More Playback Options</button>
 		</div>
 
-		{/* Tab content */}
-		{activeTab === 'browser' && (
-			<div>
-			  <ChordBrowser 
-				rootNote={rootNote}
-				setRootNote={setRootNote}
-				chordType={chordType}
-				setChordType={setChordType}
-				playChord={(newRoot, newType) => playChord(newRoot, newType, [4])}
-			  />
-			</div>
-		  )}
-		  
-		  {activeTab === 'sequence' && (
-			<div>
-			  <p>{introTexts.chordSequenceGenerator}</p>
-			  <SequenceEditor 
-				chordSequence={chordSequence}
-				setChordSequence={handleChordSequenceChange}
-				setParentSequenceValidity={setIsSequenceValid}
-			  />
-			</div>
-		  )}
+		{/* Modals */}
+		{showChordBrowserModal && (
+		  <Modal title="Chord Browser" isOpen={showChordBrowserModal} onClose={() => setShowChordBrowserModal(false)}>
+			<ChordBrowser
+			  rootNote={rootNote}
+			  setRootNote={setRootNote}
+			  chordType={chordType}
+			  setChordType={setChordType}
+			  playChord={(newRoot, newType) => playChord(newRoot, newType, [4])} // Strum pattern [4] is a placeholder, confirm if ChordBrowser needs more specific patterns
+			/>
+		  </Modal>
+		)}
 
-		{activeTab === 'sound' && (
-		  <div>
-			  <p>{introTexts.soundControls}</p>
-			  <SoundControls
-				playStyle={playStyle}
-				setPlayStyle={setPlayStyle}
-				bassDampening={bassDampening}
-				setBassDampening={setBassDampening}
-				volume={volume}
-				setVolume={setVolume}
-				attackTime={attackTime}
-				setAttackTime={setAttackTime}
-				decayTime={decayTime}
-				setDecayTime={setDecayTime}
-				sustainLevel={sustainLevel}
-				setSustainLevel={setSustainLevel}
-				releaseTime={releaseTime}
-				setReleaseTime={setReleaseTime}
-				chordPlaySpeed={chordPlaySpeed}
-				setChordPlaySpeed={setChordPlaySpeed}
-				duration={duration}
-				setDuration={setDuration}
-				reverbSendLevel={reverbSendLevel}
-				setReverbSendLevel={setReverbSendLevel}
-				reverbOutputLevel={reverbOutputLevel}
-				setReverbOutputLevel={setReverbOutputLevel}
-			  />
-		  </div>
+		{showSequenceEditorModal && (
+		  <Modal title="Edit Current Sequence" isOpen={showSequenceEditorModal} onClose={() => setShowSequenceEditorModal(false)}>
+			<ManualSequenceEditor
+			  currentSequenceInApp={chordSequence}
+			  onLoadSequenceToApp={(seq, isValid) => {
+				setChordSequence(seq);
+				setIsSequenceValid(isValid); // ManualSequenceEditor handles its own validation before calling this
+			  }}
+			/>
+		  </Modal>
+		)}
+
+		{showGetSequencesModal && (
+		  <Modal title="Load New or Generate Sequence" isOpen={showGetSequencesModal} onClose={() => setShowGetSequencesModal(false)}>
+			<SequenceFeatures
+			  currentSequenceForExport={chordSequence} // For the export feature
+			  onLoadSequenceToApp={(seq) => {
+				setChordSequence(seq);
+				// GuitarChordApp's useEffect for chordSequence will call validateSequence and set isSequenceValid
+			  }}
+			/>
+		  </Modal>
+		)}
+
+		{showSoundSettingsModal && (
+		  <Modal title="Sound Settings" isOpen={showSoundSettingsModal} onClose={() => setShowSoundSettingsModal(false)}>
+			<SoundControls
+			  playStyle={playStyle}
+			  setPlayStyle={setPlayStyle}
+			  bassDampening={bassDampening}
+			  setBassDampening={setBassDampening}
+			  volume={volume}
+			  setVolume={setVolume}
+			  attackTime={attackTime}
+			  setAttackTime={setAttackTime}
+			  decayTime={decayTime}
+			  setDecayTime={setDecayTime}
+			  sustainLevel={sustainLevel}
+			  setSustainLevel={setSustainLevel}
+			  releaseTime={releaseTime}
+			  setReleaseTime={setReleaseTime}
+			  chordPlaySpeed={chordPlaySpeed}
+			  setChordPlaySpeed={setChordPlaySpeed}
+			  duration={duration}
+			  setDuration={setDuration}
+			  reverbSendLevel={reverbSendLevel}
+			  setReverbSendLevel={setReverbSendLevel}
+			  reverbOutputLevel={reverbOutputLevel}
+			  setReverbOutputLevel={setReverbOutputLevel}
+			/>
+		  </Modal>
+		)}
+
+		{showAdvancedPlaybackModal && (
+		  <Modal title="Advanced Playback Controls" isOpen={showAdvancedPlaybackModal} onClose={() => setShowAdvancedPlaybackModal(false)}>
+			<AdvancedPlaybackControls
+			  onStepBackward={handleStepBackward}
+			  onStepForward={handleStepForward}
+			  onSkipToStart={handleSkipToStart}
+			  onSkipToEnd={handleSkipToEnd}
+			  isPlaying={isPlaying}
+			/>
+		  </Modal>
 		)}
 		
 		{!isInitialized && (
-		  <button onClick={initializeAudio}>Initialize Audio</button>
+		  <button onClick={initializeAudio} style={{ marginTop: '20px' }}>Initialize Audio</button>
 		)}
 	  <AnimationLayer chordData={chordData} animations={animations} />
       <style>{animationStyles} </style>
@@ -1204,7 +1196,7 @@ const renderString = (index: number) => (
 	);
 };
 
-const iconButtonStyle = {
+const iconButtonStyle: React.CSSProperties = {
   backgroundColor: 'transparent',
   border: 'none',
   cursor: 'pointer',
@@ -1215,4 +1207,15 @@ const iconButtonStyle = {
   alignItems: 'center',
   justifyContent: 'center',
 };
+
+const modalButtonStyle: React.CSSProperties = {
+  padding: '10px 15px',
+  fontSize: '1rem',
+  margin: '5px',
+  cursor: 'pointer',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  backgroundColor: '#f0f0f0',
+};
+
 export default GuitarChordApp;

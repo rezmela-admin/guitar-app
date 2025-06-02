@@ -1,40 +1,42 @@
 // appIntroTexts.ts
 
 export const introTexts: {
-  chordSequenceGenerator: string;
-  stockSongs: string;
+  manualSequenceEditor: string;
+  sequenceFeatures: string;
   soundControls: string;
-  progressionGenerator: string;  // New section
+  chordBrowser: string;
+  advancedPlayback: string;
 } = {
-  chordSequenceGenerator: `
-    Create custom chord progressions with our intuitive Chord Sequence Generator. 
-    Input chords using a simple format (e.g., "Am(4) C(4) G(4) F(4)") to build 
-    your unique sequences. Experiment with different progressions to enhance 
-    your songwriting or practice routines.
+  manualSequenceEditor: `
+    Use the **Edit Sequence** window to manually type or paste your chord progressions. 
+    Input chords using a simple format (e.g., "Am(D D U D) C(4)"). 
+    Once your sequence is ready, load it into the player to hear it come to life. 
+    This is perfect for quickly jotting down ideas or working with existing transcriptions.
   `,
-  
-  stockSongs: `
-    Explore our collection of pre-loaded song progressions. These carefully 
-    selected chord sequences represent popular songs across various genres. 
-    Use them to learn new songs, understand common chord progressions, or 
-    as inspiration for your own compositions.
+  sequenceFeatures: `
+    Discover and load chord sequences in the **Load/Generate Sequence** window:
+    - **Generate Progressions:** Create sequences by selecting a key and a common chord progression (e.g., I-V-vi-IV).
+    - **Stock Songs:** Explore pre-loaded progressions from popular songs.
+    - **Import/Export:** Load sequences from text files or save your creations.
+    Use the Strumming Pattern Guide for help with formatting.
   `,
-  
   soundControls: `
-    Fine-tune your guitar sound with our comprehensive Sound Controls. 
+    Fine-tune your guitar sound in the **Sound Settings** window. 
     Adjust parameters like play style (strum or arpeggio), bass dampening, 
-    volume, and ADSR envelope settings. These controls allow you to 
-    customize the sound to match different playing techniques or 
-    emulate various guitar tones.
+    volume, ADSR envelope settings (Attack, Decay, Sustain, Release), reverb, and overall duration. 
+    These controls allow you to customize the sound to match different playing techniques or emulate various guitar tones.
   `,
-
-  progressionGenerator: `
-    Discover the building blocks of popular music with our Chord Progression Generator. 
-    Choose from a variety of time-tested chord progressions used across different genres, 
-    from pop and rock to jazz and blues. Each progression is presented in Roman numeral 
-    notation, allowing you to apply it to any key. Use these as a starting point for 
-    your compositions or to understand the harmonic structure of your favorite songs. 
-    Experiment with different progressions to expand your musical vocabulary and 
-    inspire new ideas in your songwriting.
+  chordBrowser: `
+    Explore and select chords in the **Chord Browser** window. 
+    Choose a root note and chord type (e.g., C Major, A minor). 
+    The selected chord will be displayed on the fretboard, and you can hear how it sounds. 
+    The chord formula is also shown to help you understand its structure.
+  `,
+  advancedPlayback: `
+    Access additional playback options in the **More Playback Options** window.
+    Here you can:
+    - Step backward or forward through the chords in your loaded sequence.
+    - Instantly skip to the beginning or end of the sequence.
+    These controls are useful for navigating and practicing specific parts of a song.
   `
 };

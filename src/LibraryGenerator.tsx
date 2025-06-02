@@ -1,11 +1,5 @@
-import React, { useState } from 'react';
 import { KEYS } from './types';
-import stockSongs from './stockSongs.json';
 import { chordProgressions } from './sequenceFormulas';
-
-type LibraryGeneratorProps = {
-  setChordSequence: (sequence: string) => void;
-};
 
 const keyMaps: Record<string, string[]> = {
   'C Major': ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim', 'Bb', 'Ab'],
@@ -25,25 +19,19 @@ const keyMaps: Record<string, string[]> = {
 const defaultStrumPattern = 'D D U D';
 
 export function generateChordSequence(key: string, progression: string): string {
-  // Find the selected progression
   const selectedProgression = chordProgressions.find(prog => prog.value === progression);
   if (!selectedProgression) {
     throw new Error('Invalid progression selected');
   }
 
-  // Check if the key is valid
   if (!KEYS.includes(key)) {
     throw new Error('Invalid key selected');
   }
 
-  // Get the progression steps
   const progressionSteps = selectedProgression.value.split('-');
-
-  // Get the chords for the selected key
   const chords = keyMaps[key];
   const isMinorKey = key.includes('Minor');
 
-  // Function to get the chord index based on the step
   const getChordIndex = (step: string): number => {
     const lowercaseStep = step.toLowerCase();
     switch (lowercaseStep) {
@@ -54,71 +42,28 @@ export function generateChordSequence(key: string, progression: string): string 
       case 'v': return 4;
       case 'vi': return 5;
       case 'vii': return 6;
-      case 'bvii': return 7;
-      case 'bvi': return 8;
-      default: throw new Error(`Unsupported chord step: ${step}`);
+      case 'bvii': return 7; 
+      case 'bvi': return 8;  
+      default: 
+        console.warn(`Unsupported chord step: ${step} in progression "${progression}". Defaulting to tonic.`);
+        return 0; 
     }
   };
 
-  // Generate the chord sequence
   const chordSequence = progressionSteps.map(step => {
     const index = getChordIndex(step);
-    let chord = chords[index];
+    let chordName = chords[index];
 
-    // If the step is lowercase (except 'i' in minor keys) and the chord doesn't already end with 'm' or 'dim',
-    // add 'm' to make it minor
-    if (step === step.toLowerCase() && !(isMinorKey && step === 'i') && !chord.endsWith('m') && !chord.endsWith('dim')) {
-      chord += 'm';
+    if (step === step.toLowerCase() && 
+        !chordName.includes('m') && 
+        !chordName.includes('dim')) {
+      const upperStep = step.toUpperCase();
+      if (!isMinorKey && (upperStep === 'II' || upperStep === 'III' || upperStep === 'VI')) {
+        chordName += 'm';
+      }
     }
+    return `${chordName}(${defaultStrumPattern})`;
+  }).join(' ');
 
-    return `${chord}(${defaultStrumPattern})`;
-  });
-
-  // Join the chords into a single string
-  return chordSequence.join(' ');
+  return chordSequence;
 }
-
-const LibraryGenerator: React.FC<LibraryGeneratorProps> = ({ setChordSequence }) => {
-  const [selectedKey, setSelectedKey] = useState('C Major');
-  const [selectedProgression, setSelectedProgression] = useState('I-V-vi-IV');
-  const [selectedSong, setSelectedSong] = useState('');
-
-  const handleGenerate = () => {
-    const generatedSequence = generateChordSequence(selectedKey, selectedProgression);
-    setChordSequence(generatedSequence);
-  };
-
-  return (
-    <div className="library-generator">
-      <h3>Sequence Generator</h3>
-      <select value={selectedKey} onChange={(e) => setSelectedKey(e.target.value)}>
-        {KEYS.map(key => <option key={key} value={key}>{key}</option>)}
-      </select>
-      <select value={selectedProgression} onChange={(e) => setSelectedProgression(e.target.value)}>
-        {chordProgressions.map((prog, index) => (
-          <option key={index} value={prog.value}>{prog.name}</option>
-        ))}
-      </select>
-      <button onClick={handleGenerate}>Generate Sequence</button>
-
-      <h3>Stock Songs</h3>
-      <select 
-        value={selectedSong}
-        onChange={(e) => {
-          setSelectedSong(e.target.value);
-          const song = stockSongs.songs.find(s => s.title === e.target.value);
-          if (song) {
-            setChordSequence(song.chordSequence);
-          }
-        }}
-      >
-        <option value="">Select a stock song</option>
-        {stockSongs.songs.map((song, index) => (
-          <option key={index} value={song.title}>{song.title}</option>
-        ))}
-      </select>
-    </div>
-  );
-};
-
-export default LibraryGenerator;
