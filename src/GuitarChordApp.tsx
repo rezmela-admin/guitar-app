@@ -713,14 +713,21 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
 
   let fingerLetter: string | number = '0';
 
-  if (chordType === 'major' && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
+  if ((chordType === 'major' || chordType === 'minor' || chordType === 'm') && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
     const currentVoicing = availableVoicings[selectedVoicingIndex];
     const baseShapeName = currentVoicing.shapeName;
     const fretOffset = currentVoicing.fretOffset;
     const originalShapeRoot = CAGED_SHAPES[baseShapeName]?.baseRootNote;
 
     if (originalShapeRoot) {
-      const baseFingeringForString = chordFingerData[originalShapeRoot as RootNote]?.major?.[stringIndex] ?? '0';
+      const typeToLookup = (chordType === 'm' ? 'minor' : chordType) as ChordType;
+      let baseFingeringForString = chordFingerData[originalShapeRoot as RootNote]?.[typeToLookup]?.[stringIndex];
+
+      if (baseFingeringForString === undefined) {
+        // If specific minor/major fingering for base shape is not found, default to '0'
+        // This handles cases like G-minor where chordFingerData.G.minor might not exist.
+        baseFingeringForString = '0';
+      }
 
       if ((baseShapeName === 'E' || baseShapeName === 'A') && fretOffset > 0) {
         if (currentFretForString === fretOffset) {
@@ -739,10 +746,10 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
         fingerLetter = baseFingeringForString;
       }
     } else {
-      fingerLetter = '0'; // Fallback if originalShapeRoot is somehow undefined
+      fingerLetter = '0'; // Fallback if originalShapeRoot is somehow undefined (should not happen with valid CAGED_SHAPES)
     }
   } else {
-    // Fallback for non-major chords or if no CAGED voicings are determined
+    // Fallback for non-CAGED scenarios or if no voicings are available
     fingerLetter = chordFingerData[rootNote]?.[chordType]?.[stringIndex] ?? '0';
   }
 
@@ -986,7 +993,7 @@ const renderString = (index: number) => (
 			  Show Chord Function
 			</label>
 		  </div>
-          {availableVoicings.length > 0 && chordType === 'major' && ( // Only show for major chords with CAGED voicings
+          {availableVoicings.length > 0 && (chordType === 'major' || chordType === 'minor' || chordType === 'm') && (
             <div style={{ marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
               Voicings:
               {availableVoicings.map((voicing, index) => (

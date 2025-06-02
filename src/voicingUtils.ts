@@ -1,5 +1,5 @@
 import { RootNote, ChordType, ChordPosition, NOTE_SEQUENCE } from './types';
-import { CAGED_SHAPES, CagedShapeData } from './cagedShapes';
+import { CAGED_SHAPES, CagedShapeFamily } from './cagedShapes'; // Updated CagedShapeData to CagedShapeFamily
 import { transposeShape } from './transpose';
 
 export interface VoicingInfo {
@@ -10,15 +10,12 @@ export interface VoicingInfo {
 
 export function getCagedVoicings(
   targetRoot: RootNote,
-  targetType: ChordType // Initially, we'll only implement for 'major'
+  targetType: ChordType
 ): VoicingInfo[] {
   const voicings: VoicingInfo[] = [];
 
-  if (targetType !== 'major') {
-    // For now, only support major chords with CAGED shapes
-    // console.warn("getCagedVoicings currently only supports 'major' chords.");
-    return voicings;
-  }
+  // Removed early return for non-major chords.
+  // Now it will attempt to find voicings for major or minor.
 
   const targetRootIndex = NOTE_SEQUENCE.indexOf(targetRoot);
   if (targetRootIndex === -1) {
@@ -27,11 +24,28 @@ export function getCagedVoicings(
   }
 
   for (const shapeKey in CAGED_SHAPES) {
-    const cagedShapeData: CagedShapeData = CAGED_SHAPES[shapeKey];
-    const baseRootNoteIndex = NOTE_SEQUENCE.indexOf(cagedShapeData.baseRootNote);
+    const cagedShapeFamily: CagedShapeFamily = CAGED_SHAPES[shapeKey]; // Use CagedShapeFamily
+    
+    let baseShapeToTranspose: ChordPosition | undefined;
+
+    if (targetType === 'major') {
+      baseShapeToTranspose = cagedShapeFamily.major;
+    } else if (targetType === 'minor' || targetType === 'm') {
+      baseShapeToTranspose = cagedShapeFamily.minor;
+    } else {
+      // console.warn(`Unsupported targetType: ${targetType} for CAGED voicings.`);
+      continue; // Skip if chord type is not major or minor
+    }
+
+    if (!baseShapeToTranspose) {
+      // console.log(`No ${targetType} shape defined for ${shapeKey}-family.`);
+      continue; // Skip if the specific shape (e.g., G minor) is not defined
+    }
+
+    const baseRootNoteIndex = NOTE_SEQUENCE.indexOf(cagedShapeFamily.baseRootNote);
 
     if (baseRootNoteIndex === -1) {
-      // console.error(`Base root note ${cagedShapeData.baseRootNote} for ${shapeKey}-shape not found.`);
+      // console.error(`Base root note ${cagedShapeFamily.baseRootNote} for ${shapeKey}-family not found.`);
       continue;
     }
 
@@ -41,18 +55,13 @@ export function getCagedVoicings(
       fretOffset += 12; // Ensure positive offset, cycle up the octave
     }
     
-    // The current `baseRootNote` and `fretOffset` logic should correctly place the shape
-    // such that the `baseRootNote` of the shape, when moved by `fretOffset`, becomes the `targetRoot`
-    // when considering the root note on the shape's primary root string.
-
     // Filter out impractical voicings (e.g., offset too high)
-    // Max fret for the barre or base position of the shape
     if (fretOffset > 12) { 
-        // console.log(`Skipping ${shapeKey}-shape for ${targetRoot}${targetType} - offset ${fretOffset} too high.`);
+        // console.log(`Skipping ${shapeKey}-family for ${targetRoot}${targetType} - offset ${fretOffset} too high.`);
         continue;
     }
 
-    const displayShape = transposeShape(cagedShapeData.shape, fretOffset) as ChordPosition;
+    const displayShape = transposeShape(baseShapeToTranspose, fretOffset) as ChordPosition;
     
     // Further check: ensure no resulting fret in displayShape is excessively high
     let practicalVoicing = true;
