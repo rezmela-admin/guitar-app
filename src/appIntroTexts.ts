@@ -6,6 +6,7 @@ export const introTexts: {
   soundControls: string;
   chordBrowser: string;
   advancedPlayback: string;
+  progressionGeneratorInfo: string; // New key added
 } = {
   manualSequenceEditor: `
     Use the **Edit Sequence** window to manually type or paste your chord progressions. 
@@ -38,5 +39,6 @@ export const introTexts: {
     - Step backward or forward through the chords in your loaded sequence.
     - Instantly skip to the beginning or end of the sequence.
     These controls are useful for navigating and practicing specific parts of a song.
-  `
+  `,
+  progressionGeneratorInfo: `Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns.`
 };

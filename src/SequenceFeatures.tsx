@@ -79,7 +79,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     <div>
       <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
         <h4>Chord Sequence Generator</h4>
-        <p>{introTexts.chordSequenceGenerator || "Select a key and progression to generate a sequence."}</p>
+        <p>{introTexts.progressionGeneratorInfo || "Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns."}</p>
         <div style={{display: 'flex', gap: '10px', marginBottom: '10px'}}>
             <select 
             value={selectedKey} 
