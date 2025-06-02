@@ -70,8 +70,10 @@ const validateSequence = (sequence: string): boolean => {
 
   useEffect(() => {
     // Initialize isSequenceValid based on the default sequence
+    // This will also re-run if chordSequence is changed by other means,
+    // ensuring isSequenceValid stays in sync.
     setIsSequenceValid(validateSequence(chordSequence));
-  }, []); // Runs once on mount
+  }, [chordSequence]); // Added chordSequence
 
   
     const getNote = useCallback((stringNote: Note, fret: number): Note => {
@@ -538,6 +540,7 @@ const playChord = useCallback((
 	  setShouldStopAtEnd,
 	  timerRef,
 	  isPaused,
+	  isSequenceValid, // Added to satisfy exhaustive-deps
 	  // updateChordData, // Removed as per ESLint warning (indirectly called via setRootNote/setChordType)
 	]);
 
