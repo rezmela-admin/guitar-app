@@ -12,13 +12,13 @@ import { ChordPosition } from './types'; // Import ChordPosition
  *          should result in `[-1, 3, 5, 5, 4, 3]`.
  */
 export function transposeShape(
-  baseShape: Readonly<ChordPosition>,
+  baseShape: Readonly<ChordPosition>, 
   fretOffset: number
 ): ChordPosition {
   if (fretOffset < 0) {
     console.warn("transposeShape: fretOffset cannot be negative. Returning base shape.");
     // Ensure a copy is returned that matches the ChordPosition tuple type
-    return [...baseShape] as ChordPosition;
+    return [...baseShape] as ChordPosition; 
   }
   if (fretOffset === 0) {
     // Ensure a copy is returned that matches the ChordPosition tuple type
@@ -89,7 +89,7 @@ export function getBarreInfo(transposedShape: Readonly<ChordPosition>, fretOffse
 
   const startString = stringsAtBarreFret[0];
   const endString = stringsAtBarreFret[stringsAtBarreFret.length - 1];
-
+  
   // A common interpretation of a barre is that it covers contiguous strings,
   // or at least the highest and lowest strings identified are part of the barre.
   // This function currently identifies the span of strings that are *exactly* at the barreFret.

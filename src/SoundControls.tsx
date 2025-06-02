@@ -197,13 +197,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
       <div className="control-group">
         <label>
           Reverb Send:
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={reverbSendLevel}
-            onChange={(e) => setReverbSendLevel(parseFloat(e.target.value))}
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value={reverbSendLevel} 
+            onChange={(e) => setReverbSendLevel(parseFloat(e.target.value))} 
           />
           {Math.round(reverbSendLevel * 100)}%
         </label>
@@ -211,13 +211,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
       <div className="control-group">
         <label>
           Reverb Output:
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={reverbOutputLevel}
-            onChange={(e) => setReverbOutputLevel(parseFloat(e.target.value))}
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value={reverbOutputLevel} 
+            onChange={(e) => setReverbOutputLevel(parseFloat(e.target.value))} 
           />
           {Math.round(reverbOutputLevel * 100)}%
         </label>

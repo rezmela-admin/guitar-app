@@ -40,20 +40,20 @@ export function getCagedVoicings(
     if (fretOffset < 0) {
       fretOffset += 12; // Ensure positive offset, cycle up the octave
     }
-
+    
     // The current `baseRootNote` and `fretOffset` logic should correctly place the shape
     // such that the `baseRootNote` of the shape, when moved by `fretOffset`, becomes the `targetRoot`
     // when considering the root note on the shape's primary root string.
 
     // Filter out impractical voicings (e.g., offset too high)
     // Max fret for the barre or base position of the shape
-    if (fretOffset > 12) {
+    if (fretOffset > 12) { 
         // console.log(`Skipping ${shapeKey}-shape for ${targetRoot}${targetType} - offset ${fretOffset} too high.`);
         continue;
     }
 
     const displayShape = transposeShape(cagedShapeData.shape, fretOffset) as ChordPosition;
-
+    
     // Further check: ensure no resulting fret in displayShape is excessively high
     let practicalVoicing = true;
     for (const fret of displayShape) {
@@ -74,7 +74,7 @@ export function getCagedVoicings(
       displayShape: displayShape,
     });
   }
-
+  
   // Sort voicings by fretOffset (lowest position first)
   // Then by shape name for consistent ordering if offsets are equal (e.g. open G and G-shape G)
   voicings.sort((a, b) => {
