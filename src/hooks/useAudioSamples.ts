@@ -9,14 +9,51 @@ export const useAudioSamples = () => {
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBuffersRef = useRef<Record<string, AudioBuffer>>({});
+  const reverbSendGainRef = useRef<GainNode | null>(null);
+  const delay1Ref = useRef<DelayNode | null>(null);
+  const feedback1GainRef = useRef<GainNode | null>(null);
+  const delay2Ref = useRef<DelayNode | null>(null);
+  const feedback2GainRef = useRef<GainNode | null>(null);
+  const reverbOutputGainRef = useRef<GainNode | null>(null);
 
   const initializeAudio = useCallback(async () => {
     console.log("initializeAudio called");
     try {
-      console.log("Creating AudioContext");
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const localAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = localAudioContext;
       setIsInitialized(true);
       console.log("AudioContext created successfully");
+
+      // Create and configure reverb nodes
+      reverbSendGainRef.current = localAudioContext.createGain();
+      delay1Ref.current = localAudioContext.createDelay();
+      feedback1GainRef.current = localAudioContext.createGain();
+      delay2Ref.current = localAudioContext.createDelay();
+      feedback2GainRef.current = localAudioContext.createGain();
+      reverbOutputGainRef.current = localAudioContext.createGain();
+
+      reverbSendGainRef.current.gain.value = 0.4;
+      if (delay1Ref.current) delay1Ref.current.delayTime.value = 0.025; // 25ms
+      if (feedback1GainRef.current) feedback1GainRef.current.gain.value = 0.65;
+      if (delay2Ref.current) delay2Ref.current.delayTime.value = 0.045; // 45ms
+      if (feedback2GainRef.current) feedback2GainRef.current.gain.value = 0.55;
+      reverbOutputGainRef.current.gain.value = 0.7;
+
+      // Connect reverb nodes
+      if (reverbSendGainRef.current && delay1Ref.current && feedback1GainRef.current && delay2Ref.current && feedback2GainRef.current && reverbOutputGainRef.current) {
+        reverbSendGainRef.current.connect(delay1Ref.current);
+        delay1Ref.current.connect(feedback1GainRef.current);
+        feedback1GainRef.current.connect(delay1Ref.current); // Feedback loop 1
+        delay1Ref.current.connect(reverbOutputGainRef.current);
+
+        reverbSendGainRef.current.connect(delay2Ref.current);
+        delay2Ref.current.connect(feedback2GainRef.current);
+        feedback2GainRef.current.connect(delay2Ref.current); // Feedback loop 2
+        delay2Ref.current.connect(reverbOutputGainRef.current);
+
+        reverbOutputGainRef.current.connect(localAudioContext.destination);
+      }
+
 
       const samples = [
         'E2', 'F2', 'Fs2', 'G2', 'Gs2', 'A2', 'As2', 'B2',
@@ -39,7 +76,8 @@ export const useAudioSamples = () => {
           }
           const arrayBuffer = await response.arrayBuffer();
           console.log(`Decoding audio data for ${sample}`);
-          const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+          if (!localAudioContext) throw new Error("AudioContext not available for decoding");
+          const audioBuffer = await localAudioContext.decodeAudioData(arrayBuffer);
           audioBuffersRef.current[sample] = audioBuffer;
           
           loadedSamples++;
@@ -88,20 +126,23 @@ export const useAudioSamples = () => {
 		const source = audioContextRef.current.createBufferSource();
 		source.buffer = audioBuffersRef.current[sampleName];
 		
-		const gainNode = audioContextRef.current.createGain();
+		const adsrGainNode = audioContextRef.current.createGain(); // Renamed from gainNode
 		const currentTime = audioContextRef.current.currentTime;
 		
 		// Envelope setup
 		const initialGain = 0.001;
-		gainNode.gain.setValueAtTime(initialGain, currentTime);
-		gainNode.gain.exponentialRampToValueAtTime(volume, currentTime + attackTime);
-		gainNode.gain.setTargetAtTime(volume * sustainLevel, currentTime + attackTime, decayTime / 3);
+		adsrGainNode.gain.setValueAtTime(initialGain, currentTime);
+		adsrGainNode.gain.exponentialRampToValueAtTime(volume, currentTime + attackTime);
+		adsrGainNode.gain.setTargetAtTime(volume * sustainLevel, currentTime + attackTime, decayTime / 3);
 		const noteDuration = Math.max(duration / 1000, releaseTime);
 		const releaseStart = currentTime + noteDuration - releaseTime;
-		gainNode.gain.setTargetAtTime(initialGain, releaseStart, releaseTime / 3);
+		adsrGainNode.gain.setTargetAtTime(initialGain, releaseStart, releaseTime / 3);
 		
-		source.connect(gainNode);
-		gainNode.connect(audioContextRef.current.destination);
+		source.connect(adsrGainNode);
+		adsrGainNode.connect(audioContextRef.current.destination); // Dry signal
+		if (reverbSendGainRef.current) {
+		  adsrGainNode.connect(reverbSendGainRef.current); // Wet signal send
+		}
 		
 		// No pitch adjustment needed as we're using the exact sample
 		source.playbackRate.setValueAtTime(1, currentTime);
