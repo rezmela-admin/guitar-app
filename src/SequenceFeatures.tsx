@@ -104,7 +104,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
 
       <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
         <h4>Stock Songs</h4>
-        <p>{introTexts.stockSongs || "Select a pre-defined song sequence."}</p>
+        <p>{introTexts.stockSongsInfo || "Explore our collection of pre-loaded song progressions. These carefully selected chord sequences represent popular songs across various genres. Use them to learn new songs, understand common chord progressions, or as inspiration for your own compositions."}</p>
         <select 
           value={selectedSong}
           onChange={handleStockSongSelection}
