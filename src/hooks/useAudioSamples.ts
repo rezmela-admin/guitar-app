@@ -109,7 +109,9 @@ export const useAudioSamples = () => {
 	  attackTime: number = 0.005,
 	  decayTime: number = 0.2,
 	  sustainLevel: number = 0.9,
-	  releaseTime: number = 0.5
+	  releaseTime: number = 0.5,
+      reverbSend: number = 0.4, // Default matching initial state
+      reverbOutput: number = 0.7  // Default matching initial state
 	) => {
 	  if (!audioContextRef.current) {
 		console.warn('Audio context not initialized. Cannot play note.');
@@ -146,6 +148,14 @@ export const useAudioSamples = () => {
 		
 		// No pitch adjustment needed as we're using the exact sample
 		source.playbackRate.setValueAtTime(1, currentTime);
+
+        // Dynamically set reverb levels based on parameters
+        if (reverbSendGainRef.current && audioContextRef.current) {
+          reverbSendGainRef.current.gain.setValueAtTime(reverbSend, audioContextRef.current.currentTime);
+        }
+        if (reverbOutputGainRef.current && audioContextRef.current) {
+          reverbOutputGainRef.current.gain.setValueAtTime(reverbOutput, audioContextRef.current.currentTime);
+        }
 		
 		source.start(currentTime);
 		source.stop(currentTime + noteDuration);

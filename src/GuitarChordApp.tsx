@@ -38,6 +38,8 @@ const GuitarChordApp: React.FC = () => {
   const [decayTime, setDecayTime] = useState(0.15);
   const [sustainLevel, setSustainLevel] = useState(0.2);
   const [releaseTime, setReleaseTime] = useState(0.3);
+  const [reverbSendLevel, setReverbSendLevel] = useState(0.4); // Added
+  const [reverbOutputLevel, setReverbOutputLevel] = useState(0.7); // Added
   const [isChordPlaying, setIsChordPlaying] = useState(false);
   const [chordPlaySpeed, setChordPlaySpeed] = useState(11);
   const [duration, setDuration] = useState(495);
@@ -90,12 +92,24 @@ const playAudioNoteWithAnimation = useCallback((
   position: number,
   isUpstroke: boolean,
   volume: number, 
-  duration: number
+  duration: number,
+  currentReverbSend: number, // New parameter
+  currentReverbOutput: number // New parameter
 ) => {
   console.log(`Attempting to play and animate note: ${midiNote}`);
-  playAudioNote(midiNote, volume, duration);
+  playAudioNote( // This is the playNote from useAudioSamples
+    midiNote,
+    volume,
+    duration,
+    attackTime, // global state attackTime
+    decayTime,  // global state decayTime
+    sustainLevel, // global state sustainLevel
+    releaseTime,  // global state releaseTime
+    currentReverbSend, // Pass through
+    currentReverbOutput // Pass through
+  );
   triggerNoteAnimation(midiNote, stringNumber, position, isUpstroke, setAnimations);
-}, [playAudioNote]); // Removed setAnimations (stable setter) and triggerNoteAnimation (stable import)
+}, [playAudioNote, attackTime, decayTime, sustainLevel, releaseTime, setAnimations]);
 
   
 	   useEffect(() => {
@@ -345,7 +359,9 @@ const playChord = useCallback((
             typeof position === 'number' ? position : -1, // Pass numeric position or -1
             isUpstroke,
             stringVolume,
-            actualDuration
+            actualDuration,
+            reverbSendLevel,
+            reverbOutputLevel
           );
         }, delay);
       }
@@ -373,20 +389,14 @@ const playChord = useCallback((
   chordPlaySpeed,
   bassDampening,
   duration,
-  // attackTime, // Removed, not used to call playAudioNoteWithAnimation
-  // decayTime, // Removed
-  // sustainLevel, // Removed
-  // releaseTime, // Removed
   volume,
   playAudioNoteWithAnimation,
-  // chordPositions,
-  // getMidiNoteFromPosition, // Removed (stable import)
-  // selectedGShape, // Removed as the state variable itself is removed
-  // Dependencies for when current global chord is played with its selected voicing:
   availableVoicings,
   selectedVoicingIndex,
-  rootNote, // global rootNote
-  chordType // global chordType
+  rootNote,
+  chordType,
+  reverbSendLevel, // Added
+  reverbOutputLevel // Added
 ]);
 
 	// Removed unused handleChordChange useCallback
@@ -681,7 +691,9 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
         data.position,
         false, // isUpstroke - set to false for individual note clicks
         volume,
-        duration
+        duration,
+        reverbSendLevel,
+        reverbOutputLevel
       );
     }
   };
@@ -778,7 +790,7 @@ const renderNotePosition = useCallback((data: ChordDataItem, visualIndex: number
       </text>
     );
   }
-	}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType, availableVoicings, selectedVoicingIndex]);
+	}, [playAudioNoteWithAnimation, volume, duration, rootNote, chordType, availableVoicings, selectedVoicingIndex, reverbSendLevel, reverbOutputLevel]); // Added reverb levels
 
 const FingerLegend: React.FC = () => {
   const legendItems = [
@@ -1131,6 +1143,10 @@ const renderString = (index: number) => (
 				setChordPlaySpeed={setChordPlaySpeed}
 				duration={duration}
 				setDuration={setDuration}
+				reverbSendLevel={reverbSendLevel}
+				setReverbSendLevel={setReverbSendLevel}
+				reverbOutputLevel={reverbOutputLevel}
+				setReverbOutputLevel={setReverbOutputLevel}
 			  />
 		  </div>
 		)}
