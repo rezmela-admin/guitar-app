@@ -7,11 +7,13 @@ import { introTexts } from './appIntroTexts';
 
 interface SequenceEditorProps {
   chordSequence: string;
-  setChordSequence: React.Dispatch<React.SetStateAction<string>>;
-  setSequenceValidity: React.Dispatch<React.SetStateAction<boolean>>;
+  setChordSequence: (sequence: string) => void;
+  setParentSequenceValidity: (isValid: boolean) => void;
 }
 
-const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChordSequence, setSequenceValidity }) => {
+const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChordSequence, setParentSequenceValidity }) => {
+  const [isDirty, setIsDirty] = useState(false);
+  const [isLocalSequenceValid, setIsLocalSequenceValid] = useState(true);
   // const [cursorPosition, setCursorPosition] = useState<number>(0); // Removed
   const [selectedKey, setSelectedKey] = useState<string>('C Major');
   const [selectedProgression, setSelectedProgression] = useState<string>('');
@@ -23,28 +25,38 @@ const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChord
   useEffect(() => {
     console.log("chordSequence prop updated:", chordSequence);
     setLocalChordSequence(chordSequence);
+    setIsLocalSequenceValid(validateSequence(chordSequence));
+    setIsDirty(false); // Sequence loaded from parent is considered "clean"
   }, [chordSequence]);
 
 const validateSequence = (sequence: string): boolean => {
+  // An empty sequence is considered valid for the purpose of allowing it to be cleared or started fresh.
+  // The playback mechanism should handle empty sequences appropriately (e.g., by doing nothing).
+  if (sequence.trim() === "") {
+    return true;
+  }
   const chordPattern = /([A-G][b#]?)([^(]*)\(((?:[DU]\s?)+|[0-9]+)\)/;
   const lines = sequence.split('\n');
+  // Ensure at least one line has valid chords if the sequence is not empty
   return lines.some(line => {
     const parts = line.split(':');
+    if (parts.length === 0) return false; // Should not happen with non-empty sequence but good for safety
     const chordsSection = parts[parts.length - 1];
-    return chordsSection.split(',').some(part => chordPattern.test(part.trim()));
+    // Ensure chordsSection is not undefined and is a string
+    return typeof chordsSection === 'string' && chordsSection.split(',').some(part => chordPattern.test(part.trim()));
   });
 };
 
   const updateSequence = (newSequence: string) => {
     setLocalChordSequence(newSequence);
     const isValid = validateSequence(newSequence);
-	setChordSequence(newSequence);
-	setSequenceValidity(isValid);
-	console.log(isValid ? "Valid sequence:" : "Invalid sequence:", newSequence);
+    setIsLocalSequenceValid(isValid);
+    setIsDirty(true);
+    console.log(isValid ? "Local sequence valid:" : "Local sequence invalid:", newSequence);
   };
   
   const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-	  updateSequence(event.target.value);
+    updateSequence(event.target.value);
   };
 
 	// const handleCursorChange = () => { // Removed
@@ -93,7 +105,7 @@ const validateSequence = (sequence: string): boolean => {
 	   setSelectedSong(e.target.value);
 	   const song = stockSongs.songs.find(s => s.title === e.target.value);
 	   if (song) {
-		 updateSequence(song.chordSequence);
+		 updateSequence(song.chordSequence); // This will set isDirty and local validity
 	   }
 	};
 
@@ -121,6 +133,17 @@ const validateSequence = (sequence: string): boolean => {
     URL.revokeObjectURL(url);
   };
 
+  const handleLoadSequenceForPlayback = () => {
+    if (!isDirty || !isLocalSequenceValid) {
+      console.warn("Attempted to load sequence for playback when not dirty or invalid.");
+      return;
+    }
+    setChordSequence(localChordSequence);
+    setParentSequenceValidity(isLocalSequenceValid);
+    setIsDirty(false);
+    console.log("Sequence loaded for playback:", localChordSequence);
+  };
+
   return (
     <div>
       <textarea
@@ -129,11 +152,18 @@ const validateSequence = (sequence: string): boolean => {
         onChange={handleTextChange}
         // onKeyUp={handleCursorChange} // Removed
         // onClick={handleCursorChange} // Removed
-        style={{ width: '100%', height: '100px', marginBottom: '20px' }}
+        style={{ width: '100%', height: '100px', marginBottom: '10px' }}
       />
+      <button 
+        onClick={handleLoadSequenceForPlayback} 
+        disabled={!isDirty || !isLocalSequenceValid}
+        style={{ marginBottom: '10px', display: 'block' }}
+      >
+        Load Sequence for Playback
+      </button>
       <div style={{ marginBottom: '20px' }}>
         <h4>Chord Sequence Generator</h4>
-        <p>{introTexts.stockSongs}</p>
+        <p>{introTexts.stockSongs}</p> {/* Assuming introTexts.stockSongs can be reused or needs specific text */}
         <select 
           value={selectedKey} 
           onChange={(e) => setSelectedKey(e.target.value)}
@@ -155,7 +185,7 @@ const validateSequence = (sequence: string): boolean => {
       </div>
       <div>
         <h4>Stock Songs</h4>
-        <p>{introTexts.stockSongs}</p>
+        <p>{introTexts.stockSongs}</p> {/* Assuming introTexts.stockSongs can be reused or needs specific text */}
         <select 
           value={selectedSong}
           onChange={handleStockSongSelection}

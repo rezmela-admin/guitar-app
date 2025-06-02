@@ -23,7 +23,8 @@ const GuitarChordApp: React.FC = () => {
   const [rootNote, setRootNote] = useState<RootNote>('D');
   const [chordType, setChordType] = useState<ChordType>('major');
   const [chordSequence, setChordSequence] = useState<string>("D(D D U D), A(D D U D), Bm(D D U D), F#m(D D U D), G(D D U D), D(D D U D), G(D D U D), A(D D U D)");
-  const [isSequenceValid, setIsSequenceValid] = useState<boolean>(true);
+  // Initial validation will be set by validateSequence function defined below
+  const [isSequenceValid, setIsSequenceValid] = useState<boolean>(false); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentChordIndex, setCurrentChordIndex] = useState(0);
   const [isLooping, setIsLooping] = useState(false);
@@ -51,7 +52,27 @@ const GuitarChordApp: React.FC = () => {
   const [shouldStopAtEnd, setShouldStopAtEnd] = useState(false);
   const [chordData, setChordData] = useState<ChordDataItem[]>([]);
   const [animations, setAnimations] = useState<JSX.Element[]>([]);
-  
+
+// Copied from SequenceEditor.tsx for initial validation and use within GuitarChordApp
+const validateSequence = (sequence: string): boolean => {
+  if (sequence.trim() === "") {
+    return true; // Empty sequence is considered valid
+  }
+  const chordPattern = /([A-G][b#]?)([^(]*)\(((?:[DU]\s?)+|[0-9]+)\)/;
+  const lines = sequence.split('\n');
+  return lines.some(line => {
+    const parts = line.split(':');
+    if (parts.length === 0) return false;
+    const chordsSection = parts[parts.length - 1];
+    return typeof chordsSection === 'string' && chordsSection.split(',').some(part => chordPattern.test(part.trim()));
+  });
+};
+
+  useEffect(() => {
+    // Initialize isSequenceValid based on the default sequence
+    setIsSequenceValid(validateSequence(chordSequence));
+  }, []); // Runs once on mount
+
   
     const getNote = useCallback((stringNote: Note, fret: number): Note => {
 		const startIndex = NOTE_SEQUENCE.indexOf(stringNote);
@@ -402,6 +423,13 @@ const playChord = useCallback((
 	// Removed unused handleChordChange useCallback
 
 	const playSequence = useCallback(() => {
+    if (!isSequenceValid) {
+      console.error("Attempting to play an invalid sequence. Aborting playback.");
+      alert("The current sequence is invalid and cannot be played. Please correct it in the Sequence Editor and load it again.");
+      setIsPlaying(false); // Ensure UI reflects that playback is not active
+      return;
+    }
+
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null; 
@@ -635,12 +663,18 @@ const handleSkipToEnd = () => {
   };
 
 const renderCurrentInfo = () => {
-  if (chordSequence && isSequenceValid) {
-    const chords = parseChordSequence(chordSequence);
+  if (chordSequence) { // Always try to display the sequence text
+    const chords = parseChordSequence(chordSequence); // Parse it for display
     let currentSection = "";
+    const sequenceIsValidDisplay = isSequenceValid ? 
+      null : 
+      <span style={{ color: 'red', fontWeight: 'bold' }}> (Warning: This sequence is invalid and may not play correctly!)</span>;
+
     return (
       <div>
-        Current Sequence: 
+        Current Loaded Sequence: 
+        {sequenceIsValidDisplay}
+        <br />
         {chords.map((chord, index) => {
           const [root, type, strumPattern, section] = chord;
           const chordName = `${root}${type === 'major' ? '' : type}`;
@@ -651,7 +685,7 @@ const renderCurrentInfo = () => {
             currentSection = section;
             sectionHeader = (
               <React.Fragment key={`section-${index}`}>
-                <br />{section ? `${section}:` : ''}<br />
+                <br />{section ? `${section}: ` : ''}
               </React.Fragment>
             );
           }
@@ -660,7 +694,7 @@ const renderCurrentInfo = () => {
             <React.Fragment key={`chord-${index}`}>
               {sectionHeader}
               <span style={{
-                fontWeight: index === currentChordIndex ? 'bold' : 'normal',
+                fontWeight: index === currentChordIndex && isPlaying ? 'bold' : 'normal', // Bold only if playing and current
                 marginRight: '5px'
               }}>
                 {chordDisplay}
@@ -671,11 +705,7 @@ const renderCurrentInfo = () => {
         })}
       </div>
     );
-  } else if (chordSequence && !isSequenceValid) {
-    return (
-      <div>Current Sequence: <span style={{ color: 'red' }}>Invalid sequence</span></div>
-    );
-  } else {
+  }  else { // Fallback if chordSequence is empty or undefined (though state is initialized)
     return (
       <div>Current Chord: {getCurrentChordName()}</div>
     );
@@ -1127,7 +1157,7 @@ const renderString = (index: number) => (
 			  <SequenceEditor 
 				chordSequence={chordSequence}
 				setChordSequence={handleChordSequenceChange}
-				setSequenceValidity={setIsSequenceValid}
+				setParentSequenceValidity={setIsSequenceValid}
 			  />
 			</div>
 		  )}
