@@ -46,7 +46,7 @@ const GuitarChordApp: React.FC = () => {
 
   // Updated or new state variables
   const [playStyle, setPlayStyle] = useState<'strum' | 'arpeggio'>('arpeggio');
-  const [bassDampening, setBassDampening] = useState(0.7);
+  const [bassLevel, setBassLevel] = useState(0.7);
   const [attackTime, setAttackTime] = useState(0.01);
   const [decayTime, setDecayTime] = useState(0.15);
   const [sustainLevel, setSustainLevel] = useState(0.2);
@@ -378,7 +378,7 @@ const playChord = useCallback((
   strumPattern: StrumPattern,
   style?: 'strum' | 'arpeggio',
   customChordPlaySpeed?: number,
-  customBassDampening?: number,
+  customBassLevel?: number,
   customDuration?: number,
   customAttackTime?: number,
   customDecayTime?: number,
@@ -388,7 +388,7 @@ const playChord = useCallback((
 ) => {
   const actualStyle = style || playStyle;
   const actualChordPlaySpeed = customChordPlaySpeed !== undefined ? customChordPlaySpeed : chordPlaySpeed;
-  const actualBassDampening = customBassDampening !== undefined ? customBassDampening : bassDampening;
+  const actualBassLevel = customBassLevel !== undefined ? customBassLevel : bassLevel;
   const actualDuration = customDuration !== undefined ? customDuration : duration;
   // actualAttackTime, actualDecayTime, actualSustainLevel, actualReleaseTime removed as they are not used
   const actualVolume = customVolume !== undefined ? customVolume : volume;
@@ -427,7 +427,7 @@ const playChord = useCallback((
       if (midiNote !== null) {
         const confirmedMidiNote = midiNote; // TypeScript infers this as 'number'
         // stringIndexInRenderOrder is 0,1,2 for E,A,D (bass); 3,4,5 for G,B,e (treble)
-        const stringVolume = (stringIndexInRenderOrder < 3 ? actualBassDampening : 1) * actualVolume;
+        const stringVolume = (stringIndexInRenderOrder < 3 ? actualBassLevel : 1) * actualVolume;
         
         let delay = (indexInStrum * (baseDuration / shapeToPlay.filter(p => typeof p === 'number').length)) / speedMultiplier;
         if (isUpstroke) {
@@ -470,7 +470,7 @@ const playChord = useCallback((
 }, [
   playStyle,
   chordPlaySpeed,
-  bassDampening,
+  bassLevel,
   duration,
   volume,
   playAudioNoteWithAnimation,
@@ -552,7 +552,7 @@ const playChord = useCallback((
 
 		const playStrum = (strumIndex: number) => {
 		  if (strumIndex < strumPattern.length) {
-			const strumDuration = playChord(root, type, [strumPattern[strumIndex]], playStyle, chordPlaySpeed, bassDampening, duration, attackTime, decayTime, sustainLevel, releaseTime);
+			const strumDuration = playChord(root, type, [strumPattern[strumIndex]], playStyle, chordPlaySpeed, bassLevel, duration, attackTime, decayTime, sustainLevel, releaseTime);
 			totalDuration += strumDuration;
 
 			timerRef.current = setTimeout(() => {
@@ -590,7 +590,7 @@ const playChord = useCallback((
 	  playChord,
 	  playStyle,
 	  chordPlaySpeed,
-	  bassDampening,
+	  bassLevel,
 	  duration,
 	  attackTime,
 	  decayTime,
@@ -1188,8 +1188,8 @@ const renderString = (index: number) => (
 			<SoundControls
 			  playStyle={playStyle}
 			  setPlayStyle={setPlayStyle}
-			  bassDampening={bassDampening}
-			  setBassDampening={setBassDampening}
+			  bassLevel={bassLevel}
+			  setBassLevel={setBassLevel}
 			  volume={volume}
 			  setVolume={setVolume}
 			  attackTime={attackTime}

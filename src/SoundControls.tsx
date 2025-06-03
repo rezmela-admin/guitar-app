@@ -18,8 +18,8 @@ const logPosition = (value: number, min: number, max: number) => {
 interface SoundControlsProps {
   playStyle: 'strum' | 'arpeggio';
   setPlayStyle: React.Dispatch<React.SetStateAction<'strum' | 'arpeggio'>>;
-  bassDampening: number;
-  setBassDampening: React.Dispatch<React.SetStateAction<number>>;
+  bassLevel: number;
+  setBassLevel: React.Dispatch<React.SetStateAction<number>>;
   volume: number;
   setVolume: React.Dispatch<React.SetStateAction<number>>;
   attackTime: number;
@@ -47,8 +47,8 @@ interface SoundControlsProps {
 const SoundControls: React.FC<SoundControlsProps> = ({
   playStyle,
   setPlayStyle,
-  bassDampening,
-  setBassDampening,
+  bassLevel,
+  setBassLevel,
   volume,
   setVolume,
   attackTime,
@@ -135,6 +135,8 @@ const SoundControls: React.FC<SoundControlsProps> = ({
     cursor: 'pointer',
   };
 
+  // Dynamic label for chordPlaySpeed
+  const speedLabel = chordPlaySpeed < 120 ? "Faster" : chordPlaySpeed > 250 ? "Slower" : "Normal";
 
   return (
     <div style={containerStyle}>
@@ -159,7 +161,7 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="chordPlaySpeed" style={labelStyle}>
           Chord Play Speed
           <span style={valueDisplayStyle}>
-            ({Math.round(chordPlaySpeed)} ms - {chordPlaySpeed === 100 ? "Normal" : chordPlaySpeed < 100 ? "Faster" : "Slower"})
+            ({Math.round(chordPlaySpeed)} ms - {speedLabel})
           </span>
         </label>
         <input
@@ -167,8 +169,8 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           type="range"
           min="0"
           max="100"
-          value={logPosition(chordPlaySpeed, 10, 1000)}
-          onChange={(e) => setChordPlaySpeed(logScale(Number(e.target.value), 10, 1000))}
+          value={100 - logPosition(chordPlaySpeed, 10, 1000)}
+          onChange={(e) => setChordPlaySpeed(logScale(100 - Number(e.target.value), 10, 1000))}
           style={rangeInputStyle}
         />
       </div>
@@ -208,18 +210,18 @@ const SoundControls: React.FC<SoundControlsProps> = ({
       </div>
 
       <div style={controlGroupStyle}>
-        <label htmlFor="bassDampening" style={labelStyle}>
-          Bass Dampening
-          <span style={valueDisplayStyle}>({bassDampening.toFixed(1)})</span>
+        <label htmlFor="bassLevel" style={labelStyle}>
+          Bass Level
+          <span style={valueDisplayStyle}>({bassLevel.toFixed(1)})</span>
         </label>
         <input
-          id="bassDampening"
+          id="bassLevel"
           type="range"
           min="0.1"
           max="1"
           step="0.1"
-          value={bassDampening}
-          onChange={(e) => setBassDampening(Number(e.target.value))}
+          value={bassLevel}
+          onChange={(e) => setBassLevel(Number(e.target.value))}
           style={rangeInputStyle}
         />
       </div>
