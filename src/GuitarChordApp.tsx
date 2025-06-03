@@ -193,11 +193,26 @@ const playAudioNoteWithAnimation = useCallback((
     const newVoicings = getCagedVoicings(rootNote, chordType);
     setAvailableVoicings(newVoicings);
     const newIndex = 0; 
+    // Check if selectedVoicingIndex needs to be reset or if it's still valid with new voicings.
+    // For simplicity, always reset to 0 when root/type changes.
+    // A more complex logic might try to preserve the selected index if the voicing still exists.
     setSelectedVoicingIndex(newIndex);
     
     updateChordData(rootNote, chordType, newVoicings, newIndex);
     resetAnimations(setAnimations);
-  }, [rootNote, chordType, updateChordData]); // updateChordData must be stable
+  }, [rootNote, chordType, updateChordData]);
+
+  // New useEffect to update chordData when selectedVoicingIndex changes
+  useEffect(() => {
+    // Only run if there are available voicings and a valid index is selected
+    if (availableVoicings.length > 0 && selectedVoicingIndex >= 0 && selectedVoicingIndex < availableVoicings.length) {
+      updateChordData(rootNote, chordType, availableVoicings, selectedVoicingIndex);
+      resetAnimations(setAnimations); // Also reset animations when voicing changes
+    }
+    // If no voicings are available or index is bad, the primary useEffect for rootNote/chordType
+    // should have already set a default chordData. This effect specifically handles voicing selection.
+  }, [selectedVoicingIndex, availableVoicings, rootNote, chordType, updateChordData]);
+
 
   useEffect(() => {
     if (scrollContainerRef.current && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
@@ -878,39 +893,25 @@ const FingerLegend: React.FC = () => {
 };
 
 const renderFretboard = useCallback(() => {
-  // Determine the shape to display based on selected voicing or fallback
-  let displayPositions: ChordPosition;
-  let currentFretOffset = 0; // For barre calculation
-  let activeChordDataToUse = chordData; // Default to current global chordData
+  const activeChordDataToUse = chordData; // Use chordData directly, it's now always up-to-date.
 
-  if (chordType === 'major' && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
+  let displayPositionsForBarre: ChordPosition | undefined;
+  let currentFretOffset = 0;
+
+  // Determine fretOffset and shape for barre calculation based on current selection
+  // Ensure this logic correctly covers all chord types that might have voicings (major, minor, m)
+  if ((chordType === 'major' || chordType === 'minor' || chordType === 'm') && availableVoicings.length > 0 && selectedVoicingIndex < availableVoicings.length) {
     const currentVoicing = availableVoicings[selectedVoicingIndex];
-    displayPositions = currentVoicing.displayShape;
+    displayPositionsForBarre = currentVoicing.displayShape;
     currentFretOffset = currentVoicing.fretOffset;
-    // Re-generate chordData specifically for this display, ensuring it matches the voicing
-    activeChordDataToUse = displayPositions.map((pos, index) => {
-        const stringNumber = 6 - index;
-        const stringTune = STRING_TUNING[index];
-        const noteVal = typeof pos === 'number' && pos >= 0 ? getNote(stringTune, pos) : 'X';
-        return {
-            stringNumber,
-            position: typeof pos === 'number' ? pos : -1,
-            note: noteVal,
-            displayText: showFunction && noteVal !== 'X' ? getChordFunction(noteVal, rootNote, chordType) : noteVal,
-            isRootNote: noteVal === rootNote,
-            midiNote: typeof pos === 'number' && pos >= 0 ? getMidiNoteFromPosition(stringNumber, pos) : null,
-            noteName: typeof pos === 'number' && pos >= 0 && getMidiNoteFromPosition(stringNumber, pos) !== null ? midiToNote(getMidiNoteFromPosition(stringNumber, pos)!) : 'X',
-        };
-    });
   } else {
-    // This case uses the existing global chordData which is derived from chordPositions[rootNote][chordType]
-    // Ensure displayPositions reflects this for barreInfo calculation if needed, though barreInfo is mainly for CAGED.
-    displayPositions = chordPositions[rootNote]?.[chordType] ?? chordPositions.C.major;
-    // activeChordDataToUse remains global chordData
+    // Fallback for non-CAGED type chords or if no voicings
+    displayPositionsForBarre = chordPositions[rootNote]?.[chordType];
+    // currentFretOffset remains 0 for non-barre chords or if no specific offset
   }
 
-  const barreInfo = (chordType === 'major' && currentFretOffset > 0 && displayPositions) ? 
-                    getBarreInfo(displayPositions, currentFretOffset) : null;
+  const barreInfo = (currentFretOffset > 0 && displayPositionsForBarre) ?
+                    getBarreInfo(displayPositionsForBarre, currentFretOffset) : null;
   
   // Mapping logic (Controller)
 	const mapDataToVisual = (data: ChordDataItem, visualIndex: number) => {
@@ -996,7 +997,10 @@ const renderString = (index: number) => (
 	  <AnimationLayer chordData={activeChordDataToUse} animations={animations}/>
     </svg>
   );
-}, [rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations, availableVoicings, selectedVoicingIndex, chordData]); // Added chordData
+  // Ensure all dependencies that influence the fretboard rendering are included.
+  // `chordData` is critical now. `rootNote`, `chordType` influence `getChordFunction` and `barreInfo` logic.
+  // `availableVoicings` and `selectedVoicingIndex` are needed for `barreInfo` determination.
+}, [chordData, rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations, availableVoicings, selectedVoicingIndex]);
 
 
 	 if (isLoading) {
