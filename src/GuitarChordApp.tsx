@@ -151,12 +151,13 @@ const playAudioNoteWithAnimation = useCallback((
 	   initializeAudio();
 	   }, [initializeAudio]);
 
-  // getNote and getChordFunction are defined before updateChordData
-  const getNote = useCallback((stringNote: Note, fret: number): Note => {
-    const startIndex = NOTE_SEQUENCE.indexOf(stringNote);
-    return NOTE_SEQUENCE[(startIndex + fret) % 12];
-  }, []);
+  // getNote (original definition is earlier, this one is the duplicate to be removed)
+  // const getNote = useCallback((stringNote: Note, fret: number): Note => {
+  //   const startIndex = NOTE_SEQUENCE.indexOf(stringNote);
+  //   return NOTE_SEQUENCE[(startIndex + fret) % 12];
+  // }, []);
 
+  // getChordFunction is defined before updateChordData
   const getChordFunction = useCallback((note: Note, rootNoteValue: RootNote, chordTypeValue: ChordType): string => {
     const interval = (NOTE_SEQUENCE.indexOf(note) - NOTE_SEQUENCE.indexOf(rootNoteValue) + 12) % 12;
     switch (interval) {
