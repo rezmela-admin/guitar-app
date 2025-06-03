@@ -43,6 +43,8 @@ const iconStyle: React.CSSProperties = {
   height: '20px', // Simulates h-5
   width: '20px', // Simulates w-5
   marginRight: '8px', // Simulates mr-2
+  display: 'inline-flex', // For better alignment control
+  alignItems: 'center', // Vertically align content if icon itself has weird internal alignment
 };
 
 
@@ -60,28 +62,28 @@ const AdvancedPlaybackControls: React.FC<AdvancedPlaybackControlsProps> = ({
         disabled={isPlaying} 
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
-        <SkipToStartIcon style={iconStyle} /> Skip to Start
+        <span style={iconStyle}><SkipToStartIcon /></span> Skip to Start
       </button>
       <button 
         onClick={onStepBackward} 
         disabled={isPlaying} 
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
-        <StepBackwardIcon style={iconStyle} /> Step Backward
+        <span style={iconStyle}><StepBackwardIcon /></span> Step Backward
       </button>
       <button 
         onClick={onStepForward} 
         disabled={isPlaying} 
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
-        <StepForwardIcon style={iconStyle} /> Step Forward
+        <span style={iconStyle}><StepForwardIcon /></span> Step Forward
       </button>
       <button 
         onClick={onSkipToEnd} 
         disabled={isPlaying} 
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
-        <SkipToEndIcon style={iconStyle} /> Skip to End
+        <span style={iconStyle}><SkipToEndIcon /></span> Skip to End
       </button>
     </div>
   );
