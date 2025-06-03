@@ -12,20 +12,68 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
     return null;
   }
 
+  // Basic inline styles for modal functionality
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000, // Ensure modal is on top
+  };
+
+  const panelStyle: React.CSSProperties = {
+    backgroundColor: 'white',
+    padding: '20px',
+    borderRadius: '5px',
+    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+    maxWidth: '500px',
+    width: '90%',
+    maxHeight: '90vh', // Ensure modal content can scroll
+    overflowY: 'auto', // Scroll if content overflows
+    position: 'relative', // For absolute positioning of close button if needed
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '15px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid #eee',
+  };
+  
+  const titleStyle: React.CSSProperties = {
+    margin: 0, // Remove default margin from h2
+    fontSize: '1.25rem', // Tailwind's text-xl
+    fontWeight: 'bold', // Tailwind's font-semibold
+  };
+
+  const closeButtonStyle: React.CSSProperties = {
+    background: 'none',
+    border: 'none',
+    fontSize: '1.8rem', // Larger for easier clicking
+    fontWeight: 'normal',
+    cursor: 'pointer',
+    padding: '5px',
+    lineHeight: '1',
+  };
+
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8 transition-opacity duration-300 ease-in-out">
-      <div className="bg-white p-6 rounded-xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col"> {/* Added max-h and flex structure */}
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">{title}</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-500 hover:text-gray-800 text-3xl font-light leading-none p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            aria-label="Close modal"
-          >
+    <div style={overlayStyle}>
+      <div style={panelStyle}>
+        <div style={headerStyle}>
+          <h2 style={titleStyle}>{title}</h2>
+          <button onClick={onClose} style={closeButtonStyle} aria-label="Close modal">
             &times;
           </button>
         </div>
-        <div className="overflow-y-auto"> {/* Made content area scrollable */}
+        <div> {/* Content area */}
           {children}
         </div>
       </div>

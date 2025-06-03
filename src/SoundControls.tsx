@@ -64,35 +64,93 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   reverbOutputLevel,
   setReverbOutputLevel,
 }) => {
-  const inputBaseClasses = "w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer";
-  const controlGroupClasses = "mb-4 p-3 border border-gray-200 rounded-lg shadow-sm bg-gray-50";
-  const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
-  const valueDisplayClasses = "text-xs text-gray-600 ml-2";
-  const selectInputClasses = "w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white";
+  // Basic inline styles to replace Tailwind classes
+  const containerStyle: React.CSSProperties = {
+    padding: '8px', // Simulates p-2
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px', // Simulates space-y-6
+  };
+
+  const headingStyle: React.CSSProperties = {
+    fontSize: '1.125rem', // text-lg
+    fontWeight: '600', // font-semibold
+    color: '#1f2937', // gray-800
+    marginBottom: '12px',
+    textAlign: 'center',
+  };
+  
+  const subHeadingStyle: React.CSSProperties = {
+    fontSize: '1rem', // text-md
+    fontWeight: '600', // font-semibold
+    color: '#374151', // gray-700
+    marginTop: '16px',
+    marginBottom: '8px',
+    textAlign: 'center',
+  };
+
+  const controlGroupStyle: React.CSSProperties = {
+    marginBottom: '16px', // mb-4
+    padding: '12px', // p-3
+    border: '1px solid #e5e7eb', // border-gray-200
+    borderRadius: '0.5rem', // rounded-lg
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+    backgroundColor: '#f9fafb', // bg-gray-50
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.875rem', // text-sm
+    fontWeight: '500', // font-medium
+    color: '#374151', // text-gray-700
+    marginBottom: '4px',
+  };
+
+  const valueDisplayStyle: React.CSSProperties = {
+    fontSize: '0.75rem', // text-xs
+    color: '#4b5563', // text-gray-600
+    marginLeft: '8px',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px',
+    border: '1px solid #d1d5db', // border-gray-300
+    borderRadius: '0.375rem', // rounded-md
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+    fontSize: '0.875rem', // text-sm
+    backgroundColor: 'white',
+  };
+  
+  const rangeInputStyle: React.CSSProperties = { // Minimal styling for range inputs
+    width: '100%',
+    cursor: 'pointer',
+  };
+
 
   return (
-    <div className="space-y-6 p-2"> {/* Added padding and spacing for the whole container */}
-      <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center">Sound Customization</h3>
+    <div style={containerStyle}>
+      <h3 style={headingStyle}>Sound Customization</h3>
       
-      <div className={controlGroupClasses}>
-        <label htmlFor="playStyle" className={labelClasses}>
+      <div style={controlGroupStyle}>
+        <label htmlFor="playStyle" style={labelStyle}>
           Play Style
         </label>
         <select 
           id="playStyle"
           value={playStyle} 
           onChange={(e) => setPlayStyle(e.target.value as 'strum' | 'arpeggio')}
-          className={selectInputClasses}
+          style={selectStyle}
         >
           <option value="strum">Strum</option>
           <option value="arpeggio">Arpeggio</option>
         </select>
       </div>
 
-      <div className={controlGroupClasses}>
-        <label htmlFor="chordPlaySpeed" className={labelClasses}>
+      <div style={controlGroupStyle}>
+        <label htmlFor="chordPlaySpeed" style={labelStyle}>
           Chord Play Speed 
-          <span className={valueDisplayClasses}>
+          <span style={valueDisplayStyle}>
             ({Math.round(chordPlaySpeed)} ms - {chordPlaySpeed === 100 ? "Normal" : chordPlaySpeed < 100 ? "Faster" : "Slower"})
           </span>
         </label>
@@ -103,14 +161,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           max="100" 
           value={logPosition(chordPlaySpeed, 10, 1000)}
           onChange={(e) => setChordPlaySpeed(logScale(Number(e.target.value), 10, 1000))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
 
-      <div className={controlGroupClasses}>
-        <label htmlFor="bassDampening" className={labelClasses}>
+      <div style={controlGroupStyle}>
+        <label htmlFor="bassDampening" style={labelStyle}>
           Bass Dampening 
-          <span className={valueDisplayClasses}>({bassDampening.toFixed(1)})</span>
+          <span style={valueDisplayStyle}>({bassDampening.toFixed(1)})</span>
         </label>
         <input 
           id="bassDampening"
@@ -120,13 +178,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           step="0.1" 
           value={bassDampening} 
           onChange={(e) => setBassDampening(Number(e.target.value))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
 
-      <div className={controlGroupClasses}>
-        <label htmlFor="volume" className={labelClasses}>
-          Volume <span className={valueDisplayClasses}>({Math.round(volume * 100)}%)</span>
+      <div style={controlGroupStyle}>
+        <label htmlFor="volume" style={labelStyle}>
+          Volume <span style={valueDisplayStyle}>({Math.round(volume * 100)}%)</span>
         </label>
         <input 
           id="volume"
@@ -136,14 +194,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           step="0.01" 
           value={volume} 
           onChange={(e) => setVolume(Number(e.target.value))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
 
-      <h4 className="text-md font-semibold text-gray-700 mt-4 mb-2 text-center">Envelope Controls</h4>
-      <div className={controlGroupClasses}>
-        <label htmlFor="attackTime" className={labelClasses}>
-          Attack Time <span className={valueDisplayClasses}>({attackTime.toFixed(3)} s)</span>
+      <h4 style={subHeadingStyle}>Envelope Controls</h4>
+      <div style={controlGroupStyle}>
+        <label htmlFor="attackTime" style={labelStyle}>
+          Attack Time <span style={valueDisplayStyle}>({attackTime.toFixed(3)} s)</span>
         </label>
         <input 
           id="attackTime"
@@ -152,12 +210,12 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           max="100" 
           value={logPosition(attackTime, 0.001, 2)}
           onChange={(e) => setAttackTime(logScale(Number(e.target.value), 0.001, 2))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
-      <div className={controlGroupClasses}>
-        <label htmlFor="decayTime" className={labelClasses}>
-          Decay Time <span className={valueDisplayClasses}>({decayTime.toFixed(3)} s)</span>
+      <div style={controlGroupStyle}>
+        <label htmlFor="decayTime" style={labelStyle}>
+          Decay Time <span style={valueDisplayStyle}>({decayTime.toFixed(3)} s)</span>
         </label>
         <input 
           id="decayTime"
@@ -166,12 +224,12 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           max="100" 
           value={logPosition(decayTime, 0.001, 2)}
           onChange={(e) => setDecayTime(logScale(Number(e.target.value), 0.001, 2))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
-      <div className={controlGroupClasses}>
-        <label htmlFor="sustainLevel" className={labelClasses}>
-          Sustain Level <span className={valueDisplayClasses}>({Math.round(sustainLevel * 100)}%)</span>
+      <div style={controlGroupStyle}>
+        <label htmlFor="sustainLevel" style={labelStyle}>
+          Sustain Level <span style={valueDisplayStyle}>({Math.round(sustainLevel * 100)}%)</span>
         </label>
         <input 
           id="sustainLevel"
@@ -181,12 +239,12 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           step="0.01" 
           value={sustainLevel} 
           onChange={(e) => setSustainLevel(Number(e.target.value))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
-      <div className={controlGroupClasses}>
-        <label htmlFor="releaseTime" className={labelClasses}>
-          Release Time <span className={valueDisplayClasses}>({releaseTime.toFixed(3)} s)</span>
+      <div style={controlGroupStyle}>
+        <label htmlFor="releaseTime" style={labelStyle}>
+          Release Time <span style={valueDisplayStyle}>({releaseTime.toFixed(3)} s)</span>
         </label>
         <input 
           id="releaseTime"
@@ -195,13 +253,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           max="100" 
           value={logPosition(releaseTime, 0.001, 5)}
           onChange={(e) => setReleaseTime(logScale(Number(e.target.value), 0.001, 5))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
 
-      <div className={controlGroupClasses}>
-        <label htmlFor="duration" className={labelClasses}>
-          Note Duration <span className={valueDisplayClasses}>({duration} ms)</span>
+      <div style={controlGroupStyle}>
+        <label htmlFor="duration" style={labelStyle}>
+          Note Duration <span style={valueDisplayStyle}>({duration} ms)</span>
         </label>
         <input 
           id="duration"
@@ -210,14 +268,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           max="2000" 
           value={duration} 
           onChange={(e) => setDuration(Number(e.target.value))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
 
-      <h4 className="text-md font-semibold text-gray-700 mt-4 mb-2 text-center">Reverb Controls</h4>
-      <div className={controlGroupClasses}>
-        <label htmlFor="reverbSendLevel" className={labelClasses}>
-          Reverb Send <span className={valueDisplayClasses}>({Math.round(reverbSendLevel * 100)}%)</span>
+      <h4 style={subHeadingStyle}>Reverb Controls</h4>
+      <div style={controlGroupStyle}>
+        <label htmlFor="reverbSendLevel" style={labelStyle}>
+          Reverb Send <span style={valueDisplayStyle}>({Math.round(reverbSendLevel * 100)}%)</span>
         </label>
         <input 
           id="reverbSendLevel"
@@ -227,12 +285,12 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           step="0.01" 
           value={reverbSendLevel} 
           onChange={(e) => setReverbSendLevel(parseFloat(e.target.value))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
-      <div className={controlGroupClasses}>
-        <label htmlFor="reverbOutputLevel" className={labelClasses}>
-          Reverb Output <span className={valueDisplayClasses}>({Math.round(reverbOutputLevel * 100)}%)</span>
+      <div style={controlGroupStyle}>
+        <label htmlFor="reverbOutputLevel" style={labelStyle}>
+          Reverb Output <span style={valueDisplayStyle}>({Math.round(reverbOutputLevel * 100)}%)</span>
         </label>
         <input 
           id="reverbOutputLevel"
@@ -242,7 +300,7 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           step="0.01" 
           value={reverbOutputLevel} 
           onChange={(e) => setReverbOutputLevel(parseFloat(e.target.value))} 
-          className={inputBaseClasses}
+          style={rangeInputStyle}
         />
       </div>
     </div>

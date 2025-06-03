@@ -9,7 +9,42 @@ interface AdvancedPlaybackControlsProps {
   isPlaying: boolean;
 }
 
-// controlButtonStyle and iconStyle are no longer needed as Tailwind classes will be used directly.
+// Basic styles to replace Tailwind classes
+const controlContainerStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px', // Simulates space-y-3
+  padding: '4px', // Simulates p-1
+};
+
+const baseButtonStyle: React.CSSProperties = {
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '8px 16px', // Simulates px-4 py-2
+  border: '1px solid #d1d5db', // Simulates border-gray-300
+  borderRadius: '0.375rem', // Simulates rounded-md
+  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // Simulates shadow-sm
+  fontSize: '0.875rem', // Simulates text-sm
+  fontWeight: '500', // Simulates font-medium
+  color: '#374151', // Simulates text-gray-700
+  backgroundColor: '#ffffff', // Simulates bg-white
+  cursor: 'pointer',
+};
+
+const disabledButtonStyle: React.CSSProperties = {
+  ...baseButtonStyle,
+  opacity: 0.5,
+  cursor: 'not-allowed',
+};
+
+const iconStyle: React.CSSProperties = {
+  height: '20px', // Simulates h-5
+  width: '20px', // Simulates w-5
+  marginRight: '8px', // Simulates mr-2
+};
+
 
 const AdvancedPlaybackControls: React.FC<AdvancedPlaybackControlsProps> = ({
   onStepBackward,
@@ -18,22 +53,35 @@ const AdvancedPlaybackControls: React.FC<AdvancedPlaybackControlsProps> = ({
   onSkipToEnd,
   isPlaying,
 }) => {
-  const commonButtonClasses = "w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed";
-  const iconClasses = "h-5 w-5 mr-2"; // Tailwind classes for icon size and margin
-
   return (
-    <div className="flex flex-col space-y-3 p-1"> {/* Added small padding to the container for better spacing from modal edges */}
-      <button onClick={onSkipToStart} disabled={isPlaying} className={commonButtonClasses}>
-        <SkipToStartIcon className={iconClasses} /> Skip to Start
+    <div style={controlContainerStyle}>
+      <button 
+        onClick={onSkipToStart} 
+        disabled={isPlaying} 
+        style={isPlaying ? disabledButtonStyle : baseButtonStyle}
+      >
+        <SkipToStartIcon style={iconStyle} /> Skip to Start
       </button>
-      <button onClick={onStepBackward} disabled={isPlaying} className={commonButtonClasses}>
-        <StepBackwardIcon className={iconClasses} /> Step Backward
+      <button 
+        onClick={onStepBackward} 
+        disabled={isPlaying} 
+        style={isPlaying ? disabledButtonStyle : baseButtonStyle}
+      >
+        <StepBackwardIcon style={iconStyle} /> Step Backward
       </button>
-      <button onClick={onStepForward} disabled={isPlaying} className={commonButtonClasses}>
-        <StepForwardIcon className={iconClasses} /> Step Forward
+      <button 
+        onClick={onStepForward} 
+        disabled={isPlaying} 
+        style={isPlaying ? disabledButtonStyle : baseButtonStyle}
+      >
+        <StepForwardIcon style={iconStyle} /> Step Forward
       </button>
-      <button onClick={onSkipToEnd} disabled={isPlaying} className={commonButtonClasses}>
-        <SkipToEndIcon className={iconClasses} /> Skip to End
+      <button 
+        onClick={onSkipToEnd} 
+        disabled={isPlaying} 
+        style={isPlaying ? disabledButtonStyle : baseButtonStyle}
+      >
+        <SkipToEndIcon style={iconStyle} /> Skip to End
       </button>
     </div>
   );

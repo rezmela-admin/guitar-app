@@ -75,28 +75,98 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     URL.revokeObjectURL(url);
   };
 
-  const primaryButtonClasses = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed";
-  const secondaryButtonClasses = "w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75";
-  const selectInputClasses = "w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm";
+  // Basic styles to replace Tailwind
+  const sectionStyle: React.CSSProperties = {
+    padding: '16px',
+    border: '1px solid #e5e7eb', // gray-200
+    borderRadius: '0.5rem', // rounded-lg
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+    marginBottom: '24px', // Corresponds to space-y-6 if this is the only direct child
+  };
+
+  const headingStyle: React.CSSProperties = {
+    fontSize: '1.125rem', // text-lg
+    fontWeight: '600', // font-semibold
+    marginBottom: '8px',
+    color: '#4b5563', // gray-700
+  };
+
+  const pStyle: React.CSSProperties = {
+    fontSize: '0.875rem', // text-sm
+    color: '#4b5563', // gray-600
+    marginBottom: '12px',
+  };
+  
+  const selectContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '12px',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    flexGrow: 1,
+    padding: '8px',
+    border: '1px solid #d1d5db', // gray-300
+    borderRadius: '0.375rem', // rounded-md
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
+    fontSize: '0.875rem', // text-sm
+  };
+  
+  const baseButtonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 16px',
+    fontSize: '0.875rem',
+    fontWeight: '600',
+    borderRadius: '0.375rem',
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    cursor: 'pointer',
+    border: '1px solid transparent', // For consistency
+  };
+
+  const primaryButtonStyle: React.CSSProperties = {
+    ...baseButtonStyle,
+    backgroundColor: '#2563eb', // blue-600
+    color: 'white',
+  };
+  
+  const primaryButtonDisabledStyle: React.CSSProperties = {
+    ...primaryButtonStyle,
+    opacity: 0.5,
+    cursor: 'not-allowed',
+  };
+
+  const secondaryButtonStyle: React.CSSProperties = {
+    ...baseButtonStyle,
+    backgroundColor: '#e5e7eb', // gray-200
+    color: '#374151', // gray-700
+    width: 'auto', // Allow auto width for side-by-side buttons
+    flexGrow: 1, // Allow buttons to grow in flex container
+  };
+  
+  const importExportContainerStyle: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: 'row', // Default, but explicit
+      gap: '12px', // Simulates gap-3 for row
+  };
 
 
   return (
-    <div className="space-y-6">
-      <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
-        <h4 className="text-lg font-semibold mb-2 text-gray-700">Chord Sequence Generator</h4>
-        <p className="text-sm text-gray-600 mb-3">{introTexts.progressionGeneratorInfo || "Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns."}</p>
-        <div className="flex flex-col sm:flex-row gap-3 mb-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}> {/* Simulates space-y-6 */}
+      <div style={sectionStyle}>
+        <h4 style={headingStyle}>Chord Sequence Generator</h4>
+        <p style={pStyle}>{introTexts.progressionGeneratorInfo || "Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns."}</p>
+        <div style={selectContainerStyle}>
             <select 
             value={selectedKey} 
             onChange={(e) => setSelectedKey(e.target.value)}
-            className={`${selectInputClasses} sm:flex-grow`}
+            style={selectStyle}
             >
             {KEYS.map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             <select 
             value={selectedProgression} 
             onChange={(e) => setSelectedProgression(e.target.value)}
-            className={`${selectInputClasses} sm:flex-grow`}
+            style={selectStyle}
             >
             <option value="">Select a progression</option>
             {chordProgressions.map((prog, index) => (
@@ -106,47 +176,46 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
         </div>
         <button 
             onClick={handleGenerateSequence} 
-            className={primaryButtonClasses}
-            disabled={!selectedProgression} // Disable if no progression is selected
+            style={!selectedProgression ? primaryButtonDisabledStyle : primaryButtonStyle}
+            disabled={!selectedProgression} 
         >
             Generate & Load Sequence to App
         </button>
       </div>
 
-      <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
-        <h4 className="text-lg font-semibold mb-2 text-gray-700">Stock Songs</h4>
-        <p className="text-sm text-gray-600 mb-3">{introTexts.stockSongsInfo || "Explore our collection of pre-loaded song progressions. These carefully selected chord sequences represent popular songs across various genres. Use them to learn new songs, understand common chord progressions, or as inspiration for your own compositions."}</p>
+      <div style={sectionStyle}>
+        <h4 style={headingStyle}>Stock Songs</h4>
+        <p style={pStyle}>{introTexts.stockSongsInfo || "Explore our collection of pre-loaded song progressions. These carefully selected chord sequences represent popular songs across various genres. Use them to learn new songs, understand common chord progressions, or as inspiration for your own compositions."}</p>
         <select 
           value={selectedSong}
           onChange={handleStockSongSelection}
-          className={`${selectInputClasses} mb-3`}
+          style={{...selectStyle, marginBottom: '12px', width: '100%' }} // Ensure full width for this select
         >
           <option value="">Select a stock song</option>
           {stockSongs.songs.map((song, index) => (
             <option key={index} value={song.title}>{song.title}</option>
           ))}
         </select>
-        {/* The selected song is automatically loaded via onChange, no separate button needed here */}
       </div>
 
-      <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
-        <h4 className="text-lg font-semibold mb-2 text-gray-700">Import / Export</h4>
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div style={sectionStyle}>
+        <h4 style={headingStyle}>Import / Export</h4>
+        <div style={importExportContainerStyle}>
             <input
             type="file"
             ref={fileInputRef}
             style={{ display: 'none' }}
             onChange={handleImport}
-            accept=".txt,.chords,.sequence" // More specific accept types
+            accept=".txt,.chords,.sequence"
             />
-            <button onClick={() => fileInputRef.current?.click()} className={secondaryButtonClasses}>Import & Load Sequence</button>
-            <button onClick={handleExport} className={secondaryButtonClasses}>Export Current App Sequence</button>
+            <button onClick={() => fileInputRef.current?.click()} style={secondaryButtonStyle}>Import & Load Sequence</button>
+            <button onClick={handleExport} style={secondaryButtonStyle}>Export Current App Sequence</button>
         </div>
       </div>
 
-      <div className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
-        <h4 className="text-lg font-semibold mb-2 text-gray-700">Strumming Pattern Guide</h4>
-        <div className="text-xs text-gray-600 space-y-1">
+      <div style={{...sectionStyle, backgroundColor: '#f9fafb' /* gray-50 */ }}>
+        <h4 style={headingStyle}>Strumming Pattern Guide</h4>
+        <div style={{ fontSize: '0.75rem', color: '#4b5563', display: 'flex', flexDirection: 'column', gap: '4px' }}> {/* text-xs, gray-600, space-y-1 */}
             <p>In the "Edit Sequence" modal, you can define strumming patterns or chord durations.</p>
             <p>- Use <strong>D for downstrokes</strong> and <strong>U for upstrokes</strong> within parentheses, e.g., <code>C(D D U D)</code>.</p>
             <p>- Alternatively, specify a <strong>numeric duration</strong> in beats, e.g., <code>Am(4)</code>.</p>

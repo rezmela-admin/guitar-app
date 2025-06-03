@@ -13,6 +13,7 @@ import SequenceFeatures from './SequenceFeatures'; // New
 import AdvancedPlaybackControls from './AdvancedPlaybackControls'; // New
 import SoundControls from './SoundControls';
 import Modal from './Modal'; // Import the Modal component
+// import { introTexts } from './appIntroTexts'; // Already removed, ensure it stays removed
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
 
@@ -1020,37 +1021,38 @@ const renderString = (index: number) => (
 	  }
 
 	return (
-	  <div className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8 font-sans"> {/* Increased max-width slightly and responsive padding */}
-		<h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">Interactive Chord Explorer</h2>
+	  <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+		<h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Interactive Chord Explorer</h2>
 		
 		{/* Persistent section */}
-		<div className="mb-6">
-          <div ref={scrollContainerRef} className="overflow-x-auto max-w-full border border-gray-300 rounded shadow-md">
+		<div style={{ marginBottom: '20px' }}>
+          <div ref={scrollContainerRef} style={{ overflowX: 'auto', maxWidth: '100%' }}>
             {renderFretboard()}
           </div>
-		  <div className="mt-3 text-center"> {/* Centered the checkbox */}
-			<label className="inline-flex items-center">
+		  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+			<label>
 			  <input
 				type="checkbox"
 				checked={showFunction}
 				onChange={(e) => setShowFunction(e.target.checked)}
-				className="form-checkbox h-5 w-5 text-blue-600 rounded"
+                style={{ marginRight: '5px' }}
 			  />
-			  <span className="ml-2 text-gray-700">Show Chord Function</span>
+			  Show Chord Function
 			</label>
 		  </div>
           {availableVoicings.length > 0 && (chordType === 'major' || chordType === 'minor' || chordType === 'm') && (
-            <div className="my-4 text-center">
-              <span className="text-gray-700 font-semibold mr-2">Voicings:</span>
+            <div style={{ marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
+              Voicings:
               {availableVoicings.map((voicing, index) => (
                 <button
                   key={`${voicing.shapeName}-${voicing.fretOffset}`}
                   onClick={() => setSelectedVoicingIndex(index)}
                   disabled={index === selectedVoicingIndex}
-                  className={`ml-2 px-3 py-1 text-sm font-medium rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                              ${index === selectedVoicingIndex 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'}`}
+                  style={{ marginLeft: '5px', 
+                           padding: '5px 10px',
+                           border: '1px solid #ccc',
+                           borderRadius: '4px',
+                           backgroundColor: index === selectedVoicingIndex ? '#ddd' : '#fff' }}
                   title={`Plays at fret ${voicing.fretOffset +1}`} 
                 >
                   {voicing.shapeName}-shape (Fret {voicing.fretOffset})
@@ -1058,59 +1060,67 @@ const renderString = (index: number) => (
               ))}
             </div>
           )}
-		  	  <FingerLegend /> {/* Assuming FingerLegend will also be styled or is simple enough */}
-		  <p className="text-center mb-6 text-gray-600 italic">
+		  	  <FingerLegend /> 
+		  <p style={{ textAlign: 'center', marginBottom: '20px', fontStyle: 'italic' }}>
 			Select a feature below or try the preloaded sequence.
 		  </p>
-		  <div className="p-3 bg-gray-50 border border-gray-200 rounded-md shadow text-sm text-gray-700 mb-6"> {/* Styled current info box */}
+		  <div style={{ padding: '10px', border: '1px solid #eee', borderRadius: '4px', marginBottom: '20px', backgroundColor: '#f9f9f9' }}>
             {renderCurrentInfo()}
           </div>
-			  <div className="flex justify-center my-6"> {/* Centered playback controls */}
-				<div className="flex items-center space-x-2 sm:space-x-3"> {/* Responsive spacing */}
+			  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '20px' }}>
+				<div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {/* Minimal Playback Controls - Step/Skip buttons moved to modal */}
 				  <button 
 					onClick={handlePlayPause} 
-                    className="p-2 sm:p-3 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					style={{ ...iconButtonStyle, padding: '10px' }}
                     title={isPlaying ? "Pause" : "Play"}
 				  >
-					{isPlaying ? <PauseIcon className="h-6 w-6 sm:h-7 sm:w-7 text-gray-700" /> : <PlayIcon className="h-6 w-6 sm:h-7 sm:w-7 text-gray-700" />}
+					{isPlaying ? <PauseIcon style={{height: '24px', width: '24px'}} /> : <PlayIcon style={{height: '24px', width: '24px'}} />}
 				  </button>
 				  <button 
 					onClick={stopSequence}
-                    className="p-2 sm:p-3 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					style={{ ...iconButtonStyle, padding: '10px' }}
                     title="Stop"
 				  >
-					<StopIcon className="h-6 w-6 sm:h-7 sm:w-7 text-gray-700" />
+					<StopIcon style={{height: '24px', width: '24px'}} />
 				  </button>
 				  <button 
 					  onClick={handlePlayCurrentChord}
 					  disabled={isChordPlaying}
-                      className={`p-2 sm:p-3 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500
-                                 ${isChordPlaying ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'text-gray-700'}`}
+					  style={{
+						...iconButtonStyle,
+                        padding: '10px',
+						backgroundColor: isChordPlaying ? '#cccccc' : 'transparent',
+						color: isChordPlaying ? '#666666' : 'currentColor', // Ensure icon color changes when disabled
+					  }}
 					  title="Play Current Chord"
 					>
-					  <MusicalSymbolIcon className="h-6 w-6 sm:h-7 sm:w-7" />
+					  <MusicalSymbolIcon style={{height: '24px', width: '24px'}} />
 				  </button>
 				  <button 
 					onClick={toggleLoop}
-                    className={`p-2 sm:p-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-1
-                               ${isLooping ? 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-400' : 'bg-red-500 hover:bg-red-600 text-white focus:ring-red-400'}`}
+					style={{
+					  ...iconButtonStyle,
+                      padding: '8px', // Adjusted padding for visual balance
+					  backgroundColor: isLooping ? '#4CAF50' : '#f0f0f0', // Green when active, default gray otherwise
+                      color: isLooping ? 'white' : 'black', // Ensure icon is visible
+					}}
                     title={isLooping ? "Disable Loop" : "Enable Loop"}
 				  >
-					<RepeatIcon className="h-5 w-5 sm:h-6 sm:w-6" />
+					<RepeatIcon style={{height: '20px', width: '20px'}} />
 				  </button>
 
 				</div>
 			  </div>
 		</div>
 
-		{/* New Modal Trigger Buttons - Styled with Tailwind */}
-		<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-		  <button onClick={() => setShowChordBrowserModal(true)} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75">Browse Chords</button>
-		  <button onClick={() => setShowSequenceEditorModal(true)} className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75">Edit Sequence</button>
-		  <button onClick={() => setShowGetSequencesModal(true)} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75">Load/Generate Sequence</button>
-		  <button onClick={() => setShowSoundSettingsModal(true)} className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75">Sound Settings</button>
-		  <button onClick={() => setShowAdvancedPlaybackModal(true)} className="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75 sm:col-span-2 md:col-span-1">More Playback Options</button>
+		{/* New Modal Trigger Buttons - Reverted to modalButtonStyle */}
+		<div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+		  <button onClick={() => setShowChordBrowserModal(true)} style={modalButtonStyle}>Browse Chords</button>
+		  <button onClick={() => setShowSequenceEditorModal(true)} style={modalButtonStyle}>Edit Sequence</button>
+		  <button onClick={() => setShowGetSequencesModal(true)} style={modalButtonStyle}>Load/Generate Sequence</button>
+		  <button onClick={() => setShowSoundSettingsModal(true)} style={modalButtonStyle}>Sound Settings</button>
+		  <button onClick={() => setShowAdvancedPlaybackModal(true)} style={modalButtonStyle}>More Playback Options</button>
 		</div>
 
 		{/* Modals */}
@@ -1194,18 +1204,39 @@ const renderString = (index: number) => (
 		{!isInitialized && (
 		  <button 
             onClick={initializeAudio} 
-            className="mt-5 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-75"
+            style={{ marginTop: '20px', width: '100%', padding: '10px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
             Initialize Audio
           </button>
 		)}
 	  <AnimationLayer chordData={chordData} animations={animations} />
-      {/* animationStyles might need to be converted to Tailwind or ensured they don't conflict. For now, kept as is. */}
       <style>{animationStyles} </style>
 	  </div>
 	);
 };
 
-// iconButtonStyle and modalButtonStyle constants are removed as their usages are replaced by Tailwind classes.
+const iconButtonStyle: React.CSSProperties = {
+  backgroundColor: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  padding: '5px',
+  margin: '0 5px',
+  borderRadius: '50%', // Keep it round for icon buttons
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const modalButtonStyle: React.CSSProperties = {
+  padding: '10px 15px',
+  fontSize: '1rem',
+  margin: '5px', // Allow some margin for wrapping
+  cursor: 'pointer',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  backgroundColor: '#f0f0f0', // A light gray, common for buttons
+  color: '#333', // Dark text for readability
+  textAlign: 'center',
+};
 
 export default GuitarChordApp;

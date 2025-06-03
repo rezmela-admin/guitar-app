@@ -51,25 +51,73 @@ const ManualSequenceEditor: React.FC<ManualSequenceEditorProps> = ({ currentSequ
     setIsDirty(false); // Reset dirty state after loading to app
   };
 
+  const baseButtonStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 15px',
+    fontSize: '1rem',
+    color: 'white',
+    backgroundColor: '#007bff', // Blue color
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  };
+
+  const disabledButtonStyle: React.CSSProperties = {
+    ...baseButtonStyle,
+    backgroundColor: '#cccccc',
+    color: '#666666',
+    cursor: 'not-allowed',
+  };
+  
+  const getBorderColor = () => {
+    if (!isLocalSequenceValid) return 'red';
+    if (isDirty) return 'orange';
+    return '#cccccc'; // Default gray border
+  };
+
+  const textAreaStyle: React.CSSProperties = {
+    width: '100%',
+    minHeight: '150px',
+    padding: '10px',
+    border: `1px solid ${getBorderColor()}`,
+    borderRadius: '4px',
+    boxSizing: 'border-box', // Ensure padding and border don't increase width
+    marginBottom: '10px',
+  };
+  
+  const warningTextStyle: React.CSSProperties = {
+      color: 'red',
+      fontSize: '0.875rem', // text-sm
+      marginTop: '-5px', // Adjust to be similar to -mt-2
+      marginBottom: '10px',
+  };
+
+  const dirtyTextStyle: React.CSSProperties = {
+      color: '#555555', // gray-500
+      fontStyle: 'italic',
+      fontSize: '0.75rem', // text-xs
+      marginTop: '5px',
+  };
+
   return (
-    <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}> {/* Simulates space-y-4 */}
       <textarea
         ref={textAreaRef}
         value={localChordSequence}
         onChange={handleTextChange}
-        className={`w-full min-h-[150px] p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 
-                    ${!isLocalSequenceValid ? 'border-red-500 ring-red-500' : (isDirty ? 'border-orange-500' : 'border-gray-300')}`}
+        style={textAreaStyle}
         placeholder="Enter your chord sequence here, e.g., Verse: C(D D U D) G(D U D U) Am(D D U D) F(D U D U)"
       />
-      {!isLocalSequenceValid && <p className="text-sm text-red-600 -mt-2 mb-2">Warning: The current sequence has an invalid format.</p>}
+      {!isLocalSequenceValid && <p style={warningTextStyle}>Warning: The current sequence has an invalid format.</p>}
       <button 
         onClick={handleLoadSequenceForPlayback} 
         disabled={!isDirty || !isLocalSequenceValid}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={(!isDirty || !isLocalSequenceValid) ? disabledButtonStyle : baseButtonStyle}
       >
         Load Edited Sequence to App
       </button>
-      {isDirty && <p className="text-xs text-gray-500 italic mt-1">You have unsaved changes in the editor.</p>}
+      {isDirty && <p style={dirtyTextStyle}>You have unsaved changes in the editor.</p>}
     </div>
   );
 };
