@@ -38,6 +38,10 @@ interface SoundControlsProps {
   setReverbSendLevel: React.Dispatch<React.SetStateAction<number>>;
   reverbOutputLevel: number;
   setReverbOutputLevel: React.Dispatch<React.SetStateAction<number>>;
+  upstrokeSpeedFactor: number;
+  setUpstrokeSpeedFactor: React.Dispatch<React.SetStateAction<number>>;
+  arpeggioBaseDuration: number;
+  setArpeggioBaseDuration: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const SoundControls: React.FC<SoundControlsProps> = ({
@@ -63,6 +67,10 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   setReverbSendLevel,
   reverbOutputLevel,
   setReverbOutputLevel,
+  upstrokeSpeedFactor,
+  setUpstrokeSpeedFactor,
+  arpeggioBaseDuration,
+  setArpeggioBaseDuration,
 }) => {
   // Basic inline styles to replace Tailwind classes
   const containerStyle: React.CSSProperties = {
@@ -161,6 +169,40 @@ const SoundControls: React.FC<SoundControlsProps> = ({
           max="100"
           value={logPosition(chordPlaySpeed, 10, 1000)}
           onChange={(e) => setChordPlaySpeed(logScale(Number(e.target.value), 10, 1000))}
+          style={rangeInputStyle}
+        />
+      </div>
+
+      <div style={controlGroupStyle}>
+        <label htmlFor="upstrokeSpeedFactor" style={labelStyle}>
+          Upstroke Speed Factor
+          <span style={valueDisplayStyle}>({upstrokeSpeedFactor.toFixed(1)}x)</span>
+        </label>
+        <input
+          id="upstrokeSpeedFactor"
+          type="range"
+          min="1"
+          max="4"
+          step="0.1"
+          value={upstrokeSpeedFactor}
+          onChange={(e) => setUpstrokeSpeedFactor(Number(e.target.value))}
+          style={rangeInputStyle}
+        />
+      </div>
+
+      <div style={controlGroupStyle}>
+        <label htmlFor="arpeggioBaseDuration" style={labelStyle}>
+          Arpeggio Note Spacing
+          <span style={valueDisplayStyle}>({arpeggioBaseDuration} ms)</span>
+        </label>
+        <input
+          id="arpeggioBaseDuration"
+          type="range"
+          min="100"
+          max="600"
+          step="10"
+          value={arpeggioBaseDuration}
+          onChange={(e) => setArpeggioBaseDuration(Number(e.target.value))}
           style={rangeInputStyle}
         />
       </div>

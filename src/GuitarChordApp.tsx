@@ -55,7 +55,9 @@ const GuitarChordApp: React.FC = () => {
   const [reverbOutputLevel, setReverbOutputLevel] = useState(0.7); // Added
   const [isChordPlaying, setIsChordPlaying] = useState(false);
   const [chordPlaySpeed, setChordPlaySpeed] = useState(11);
+  const [upstrokeSpeedFactor, setUpstrokeSpeedFactor] = useState(2.0);
   const [duration, setDuration] = useState(495);
+  const [arpeggioBaseDuration, setArpeggioBaseDuration] = useState(350);
   
   const [isPaused, setIsPaused] = useState(false);
   const [remainingChords, setRemainingChords] = useState<ChordWithStrum[]>([]);
@@ -403,7 +405,9 @@ const playChord = useCallback((
   }
   
   const speedMultiplier = 0.5 + (actualChordPlaySpeed / 100);
-  const baseDuration = actualStyle === 'arpeggio' ? 200 : 50; // ms
+  const baseStrumDuration = 50; // ms for strum
+  // const baseArpeggioDuration = arpeggioBaseDuration; // ms for arpeggio - This will be defined by the state variable
+  const baseDuration = actualStyle === 'arpeggio' ? arpeggioBaseDuration : baseStrumDuration;
   
   let maxDelay = 0;
 
@@ -425,7 +429,10 @@ const playChord = useCallback((
         // stringIndexInRenderOrder is 0,1,2 for E,A,D (bass); 3,4,5 for G,B,e (treble)
         const stringVolume = (stringIndexInRenderOrder < 3 ? actualBassDampening : 1) * actualVolume;
         
-        const delay = (indexInStrum * (baseDuration / shapeToPlay.filter(p => typeof p === 'number').length)) / speedMultiplier;
+        let delay = (indexInStrum * (baseDuration / shapeToPlay.filter(p => typeof p === 'number').length)) / speedMultiplier;
+        if (isUpstroke) {
+          delay /= upstrokeSpeedFactor;
+        }
         maxDelay = Math.max(maxDelay, delay);
         
         setTimeout(() => {
@@ -472,7 +479,9 @@ const playChord = useCallback((
   rootNote, 
   chordType,
   reverbSendLevel, // Added
-  reverbOutputLevel // Added
+  reverbOutputLevel, // Added
+  arpeggioBaseDuration,
+  upstrokeSpeedFactor
 ]);
 
 	// Removed unused handleChordChange useCallback
@@ -1199,6 +1208,10 @@ const renderString = (index: number) => (
 			  setReverbSendLevel={setReverbSendLevel}
 			  reverbOutputLevel={reverbOutputLevel}
 			  setReverbOutputLevel={setReverbOutputLevel}
+			  upstrokeSpeedFactor={upstrokeSpeedFactor}
+			  setUpstrokeSpeedFactor={setUpstrokeSpeedFactor}
+			  arpeggioBaseDuration={arpeggioBaseDuration}
+			  setArpeggioBaseDuration={setArpeggioBaseDuration}
 			/>
 		  </Modal>
 		)}
