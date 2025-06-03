@@ -178,7 +178,8 @@ const playAudioNoteWithAnimation = useCallback((
         stringNumber,
         position: typeof position === 'number' ? position : -1, 
         note,
-        displayText: note,
+        // displayText: note, // Old version
+        displayText: showFunction && note !== 'X' ? getChordFunction(note as Note, root, type) : note,
         isRootNote: note === root, 
         midiNote,
         noteName: midiNote !== null ? midiToNote(midiNote) : 'X'
@@ -186,7 +187,7 @@ const playAudioNoteWithAnimation = useCallback((
     });
     console.log('Updated chord data:', newChordData);
     setChordData(newChordData);
-  }, [getNote]); // midiToNote is stable if imported, selectedGShape removed
+  }, [getNote, showFunction, getChordFunction]);
   
   // Update availableVoicings and chordData when rootNote or chordType changes
   useEffect(() => {
@@ -998,9 +999,10 @@ const renderString = (index: number) => (
     </svg>
   );
   // Ensure all dependencies that influence the fretboard rendering are included.
-  // `chordData` is critical now. `rootNote`, `chordType` influence `getChordFunction` and `barreInfo` logic.
+  // `chordData` is critical now. `rootNote`, `chordType` influence `barreInfo` logic and are used by `renderNotePosition`.
   // `availableVoicings` and `selectedVoicingIndex` are needed for `barreInfo` determination.
-}, [chordData, rootNote, chordType, showFunction, getNote, getChordFunction, renderNotePosition, animations, availableVoicings, selectedVoicingIndex]);
+  // `showFunction`, `getNote`, `getChordFunction` were removed as their effects are now incorporated into `chordData` via `updateChordData`.
+}, [chordData, rootNote, chordType, renderNotePosition, animations, availableVoicings, selectedVoicingIndex]);
 
 
 	 if (isLoading) {
