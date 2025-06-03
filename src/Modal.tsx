@@ -46,7 +46,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
     paddingBottom: '10px',
     borderBottom: '1px solid #eee',
   };
-  
+
   const titleStyle: React.CSSProperties = {
     margin: 0, // Remove default margin from h2
     fontSize: '1.25rem', // Tailwind's text-xl

@@ -19,7 +19,7 @@ const ManualSequenceEditor: React.FC<ManualSequenceEditorProps> = ({ currentSequ
 
   const validateSequence = (sequence: string): boolean => {
     if (sequence.trim() === "") {
-      return true; 
+      return true;
     }
     const chordPattern = /([A-G][b#]?)([^(]*)\(((?:[DU]\s?)+|[0-9]+)\)/;
     const lines = sequence.split('\n');
@@ -69,7 +69,7 @@ const ManualSequenceEditor: React.FC<ManualSequenceEditorProps> = ({ currentSequ
     color: '#666666',
     cursor: 'not-allowed',
   };
-  
+
   const getBorderColor = () => {
     if (!isLocalSequenceValid) return 'red';
     if (isDirty) return 'orange';
@@ -85,7 +85,7 @@ const ManualSequenceEditor: React.FC<ManualSequenceEditorProps> = ({ currentSequ
     boxSizing: 'border-box', // Ensure padding and border don't increase width
     marginBottom: '10px',
   };
-  
+
   const warningTextStyle: React.CSSProperties = {
       color: 'red',
       fontSize: '0.875rem', // text-sm
@@ -110,8 +110,8 @@ const ManualSequenceEditor: React.FC<ManualSequenceEditorProps> = ({ currentSequ
         placeholder="Enter your chord sequence here, e.g., Verse: C(D D U D) G(D U D U) Am(D D U D) F(D U D U)"
       />
       {!isLocalSequenceValid && <p style={warningTextStyle}>Warning: The current sequence has an invalid format.</p>}
-      <button 
-        onClick={handleLoadSequenceForPlayback} 
+      <button
+        onClick={handleLoadSequenceForPlayback}
         disabled={!isDirty || !isLocalSequenceValid}
         style={(!isDirty || !isLocalSequenceValid) ? disabledButtonStyle : baseButtonStyle}
       >

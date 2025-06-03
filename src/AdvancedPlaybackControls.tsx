@@ -57,30 +57,30 @@ const AdvancedPlaybackControls: React.FC<AdvancedPlaybackControlsProps> = ({
 }) => {
   return (
     <div style={controlContainerStyle}>
-      <button 
-        onClick={onSkipToStart} 
-        disabled={isPlaying} 
+      <button
+        onClick={onSkipToStart}
+        disabled={isPlaying}
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
         <span style={iconStyle}><SkipToStartIcon /></span> Skip to Start
       </button>
-      <button 
-        onClick={onStepBackward} 
-        disabled={isPlaying} 
+      <button
+        onClick={onStepBackward}
+        disabled={isPlaying}
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
         <span style={iconStyle}><StepBackwardIcon /></span> Step Backward
       </button>
-      <button 
-        onClick={onStepForward} 
-        disabled={isPlaying} 
+      <button
+        onClick={onStepForward}
+        disabled={isPlaying}
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
         <span style={iconStyle}><StepForwardIcon /></span> Step Forward
       </button>
-      <button 
-        onClick={onSkipToEnd} 
-        disabled={isPlaying} 
+      <button
+        onClick={onSkipToEnd}
+        disabled={isPlaying}
         style={isPlaying ? disabledButtonStyle : baseButtonStyle}
       >
         <span style={iconStyle}><SkipToEndIcon /></span> Skip to End

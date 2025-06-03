@@ -8,10 +8,10 @@ import { introTexts } from './appIntroTexts'; // For placeholder texts if needed
 
 interface SequenceFeaturesProps {
   // This prop will send the newly generated/loaded sequence string to GuitarChordApp
-  onLoadSequenceToApp: (newSequence: string) => void; 
+  onLoadSequenceToApp: (newSequence: string) => void;
   // This prop is for the sequence currently being edited/displayed in ManualSequenceEditor,
   // primarily for the export function.
-  currentSequenceForExport: string; 
+  currentSequenceForExport: string;
 }
 
 const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp, currentSequenceForExport }) => {
@@ -96,7 +96,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     color: '#4b5563', // gray-600
     marginBottom: '12px',
   };
-  
+
   const selectContainerStyle: React.CSSProperties = {
     display: 'flex',
     gap: '12px',
@@ -111,7 +111,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // shadow-sm
     fontSize: '0.875rem', // text-sm
   };
-  
+
   const baseButtonStyle: React.CSSProperties = {
     width: '100%',
     padding: '8px 16px',
@@ -128,7 +128,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     backgroundColor: '#2563eb', // blue-600
     color: 'white',
   };
-  
+
   const primaryButtonDisabledStyle: React.CSSProperties = {
     ...primaryButtonStyle,
     opacity: 0.5,
@@ -142,7 +142,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     width: 'auto', // Allow auto width for side-by-side buttons
     flexGrow: 1, // Allow buttons to grow in flex container
   };
-  
+
   const importExportContainerStyle: React.CSSProperties = {
       display: 'flex',
       flexDirection: 'row', // Default, but explicit
@@ -156,15 +156,15 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
         <h4 style={headingStyle}>Chord Sequence Generator</h4>
         <p style={pStyle}>{introTexts.progressionGeneratorInfo || "Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns."}</p>
         <div style={selectContainerStyle}>
-            <select 
-            value={selectedKey} 
+            <select
+            value={selectedKey}
             onChange={(e) => setSelectedKey(e.target.value)}
             style={selectStyle}
             >
             {KEYS.map(key => <option key={key} value={key}>{key}</option>)}
             </select>
-            <select 
-            value={selectedProgression} 
+            <select
+            value={selectedProgression}
             onChange={(e) => setSelectedProgression(e.target.value)}
             style={selectStyle}
             >
@@ -174,10 +174,10 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
             ))}
             </select>
         </div>
-        <button 
-            onClick={handleGenerateSequence} 
+        <button
+            onClick={handleGenerateSequence}
             style={!selectedProgression ? primaryButtonDisabledStyle : primaryButtonStyle}
-            disabled={!selectedProgression} 
+            disabled={!selectedProgression}
         >
             Generate & Load Sequence to App
         </button>
@@ -186,7 +186,7 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
       <div style={sectionStyle}>
         <h4 style={headingStyle}>Stock Songs</h4>
         <p style={pStyle}>{introTexts.stockSongsInfo || "Explore our collection of pre-loaded song progressions. These carefully selected chord sequences represent popular songs across various genres. Use them to learn new songs, understand common chord progressions, or as inspiration for your own compositions."}</p>
-        <select 
+        <select
           value={selectedSong}
           onChange={handleStockSongSelection}
           style={{...selectStyle, marginBottom: '12px', width: '100%' }} // Ensure full width for this select

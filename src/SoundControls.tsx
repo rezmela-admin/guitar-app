@@ -79,7 +79,7 @@ const SoundControls: React.FC<SoundControlsProps> = ({
     marginBottom: '12px',
     textAlign: 'center',
   };
-  
+
   const subHeadingStyle: React.CSSProperties = {
     fontSize: '1rem', // text-md
     fontWeight: '600', // font-semibold
@@ -121,7 +121,7 @@ const SoundControls: React.FC<SoundControlsProps> = ({
     fontSize: '0.875rem', // text-sm
     backgroundColor: 'white',
   };
-  
+
   const rangeInputStyle: React.CSSProperties = { // Minimal styling for range inputs
     width: '100%',
     cursor: 'pointer',
@@ -131,14 +131,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   return (
     <div style={containerStyle}>
       <h3 style={headingStyle}>Sound Customization</h3>
-      
+
       <div style={controlGroupStyle}>
         <label htmlFor="playStyle" style={labelStyle}>
           Play Style
         </label>
-        <select 
+        <select
           id="playStyle"
-          value={playStyle} 
+          value={playStyle}
           onChange={(e) => setPlayStyle(e.target.value as 'strum' | 'arpeggio')}
           style={selectStyle}
         >
@@ -149,35 +149,35 @@ const SoundControls: React.FC<SoundControlsProps> = ({
 
       <div style={controlGroupStyle}>
         <label htmlFor="chordPlaySpeed" style={labelStyle}>
-          Chord Play Speed 
+          Chord Play Speed
           <span style={valueDisplayStyle}>
             ({Math.round(chordPlaySpeed)} ms - {chordPlaySpeed === 100 ? "Normal" : chordPlaySpeed < 100 ? "Faster" : "Slower"})
           </span>
         </label>
-        <input 
+        <input
           id="chordPlaySpeed"
-          type="range" 
-          min="0" 
-          max="100" 
+          type="range"
+          min="0"
+          max="100"
           value={logPosition(chordPlaySpeed, 10, 1000)}
-          onChange={(e) => setChordPlaySpeed(logScale(Number(e.target.value), 10, 1000))} 
+          onChange={(e) => setChordPlaySpeed(logScale(Number(e.target.value), 10, 1000))}
           style={rangeInputStyle}
         />
       </div>
 
       <div style={controlGroupStyle}>
         <label htmlFor="bassDampening" style={labelStyle}>
-          Bass Dampening 
+          Bass Dampening
           <span style={valueDisplayStyle}>({bassDampening.toFixed(1)})</span>
         </label>
-        <input 
+        <input
           id="bassDampening"
-          type="range" 
-          min="0.1" 
-          max="1" 
-          step="0.1" 
-          value={bassDampening} 
-          onChange={(e) => setBassDampening(Number(e.target.value))} 
+          type="range"
+          min="0.1"
+          max="1"
+          step="0.1"
+          value={bassDampening}
+          onChange={(e) => setBassDampening(Number(e.target.value))}
           style={rangeInputStyle}
         />
       </div>
@@ -186,14 +186,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="volume" style={labelStyle}>
           Volume <span style={valueDisplayStyle}>({Math.round(volume * 100)}%)</span>
         </label>
-        <input 
+        <input
           id="volume"
-          type="range" 
-          min="0" 
-          max="1" 
-          step="0.01" 
-          value={volume} 
-          onChange={(e) => setVolume(Number(e.target.value))} 
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onChange={(e) => setVolume(Number(e.target.value))}
           style={rangeInputStyle}
         />
       </div>
@@ -203,13 +203,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="attackTime" style={labelStyle}>
           Attack Time <span style={valueDisplayStyle}>({attackTime.toFixed(3)} s)</span>
         </label>
-        <input 
+        <input
           id="attackTime"
-          type="range" 
-          min="0" 
-          max="100" 
+          type="range"
+          min="0"
+          max="100"
           value={logPosition(attackTime, 0.001, 2)}
-          onChange={(e) => setAttackTime(logScale(Number(e.target.value), 0.001, 2))} 
+          onChange={(e) => setAttackTime(logScale(Number(e.target.value), 0.001, 2))}
           style={rangeInputStyle}
         />
       </div>
@@ -217,13 +217,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="decayTime" style={labelStyle}>
           Decay Time <span style={valueDisplayStyle}>({decayTime.toFixed(3)} s)</span>
         </label>
-        <input 
+        <input
           id="decayTime"
-          type="range" 
-          min="0" 
-          max="100" 
+          type="range"
+          min="0"
+          max="100"
           value={logPosition(decayTime, 0.001, 2)}
-          onChange={(e) => setDecayTime(logScale(Number(e.target.value), 0.001, 2))} 
+          onChange={(e) => setDecayTime(logScale(Number(e.target.value), 0.001, 2))}
           style={rangeInputStyle}
         />
       </div>
@@ -231,14 +231,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="sustainLevel" style={labelStyle}>
           Sustain Level <span style={valueDisplayStyle}>({Math.round(sustainLevel * 100)}%)</span>
         </label>
-        <input 
+        <input
           id="sustainLevel"
-          type="range" 
-          min="0" 
-          max="1" 
-          step="0.01" 
-          value={sustainLevel} 
-          onChange={(e) => setSustainLevel(Number(e.target.value))} 
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={sustainLevel}
+          onChange={(e) => setSustainLevel(Number(e.target.value))}
           style={rangeInputStyle}
         />
       </div>
@@ -246,13 +246,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="releaseTime" style={labelStyle}>
           Release Time <span style={valueDisplayStyle}>({releaseTime.toFixed(3)} s)</span>
         </label>
-        <input 
+        <input
           id="releaseTime"
-          type="range" 
-          min="0" 
-          max="100" 
+          type="range"
+          min="0"
+          max="100"
           value={logPosition(releaseTime, 0.001, 5)}
-          onChange={(e) => setReleaseTime(logScale(Number(e.target.value), 0.001, 5))} 
+          onChange={(e) => setReleaseTime(logScale(Number(e.target.value), 0.001, 5))}
           style={rangeInputStyle}
         />
       </div>
@@ -261,13 +261,13 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="duration" style={labelStyle}>
           Note Duration <span style={valueDisplayStyle}>({duration} ms)</span>
         </label>
-        <input 
+        <input
           id="duration"
-          type="range" 
-          min="50" 
-          max="2000" 
-          value={duration} 
-          onChange={(e) => setDuration(Number(e.target.value))} 
+          type="range"
+          min="50"
+          max="2000"
+          value={duration}
+          onChange={(e) => setDuration(Number(e.target.value))}
           style={rangeInputStyle}
         />
       </div>
@@ -277,14 +277,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="reverbSendLevel" style={labelStyle}>
           Reverb Send <span style={valueDisplayStyle}>({Math.round(reverbSendLevel * 100)}%)</span>
         </label>
-        <input 
+        <input
           id="reverbSendLevel"
-          type="range" 
-          min="0" 
-          max="1" 
-          step="0.01" 
-          value={reverbSendLevel} 
-          onChange={(e) => setReverbSendLevel(parseFloat(e.target.value))} 
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={reverbSendLevel}
+          onChange={(e) => setReverbSendLevel(parseFloat(e.target.value))}
           style={rangeInputStyle}
         />
       </div>
@@ -292,14 +292,14 @@ const SoundControls: React.FC<SoundControlsProps> = ({
         <label htmlFor="reverbOutputLevel" style={labelStyle}>
           Reverb Output <span style={valueDisplayStyle}>({Math.round(reverbOutputLevel * 100)}%)</span>
         </label>
-        <input 
+        <input
           id="reverbOutputLevel"
-          type="range" 
-          min="0" 
-          max="1" 
-          step="0.01" 
-          value={reverbOutputLevel} 
-          onChange={(e) => setReverbOutputLevel(parseFloat(e.target.value))} 
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={reverbOutputLevel}
+          onChange={(e) => setReverbOutputLevel(parseFloat(e.target.value))}
           style={rangeInputStyle}
         />
       </div>

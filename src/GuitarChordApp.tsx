@@ -6,7 +6,7 @@ import { getCagedVoicings, VoicingInfo } from './voicingUtils';
 import ChordBrowser from './ChordBrowser';
 import { useAudioSamples } from './hooks/useAudioSamples';
 // Step/Skip icons removed as they are now in AdvancedPlaybackControls.tsx
-import { PlayIcon, PauseIcon, RepeatIcon, StopIcon, MusicalSymbolIcon } from './IconComponents'; 
+import { PlayIcon, PauseIcon, RepeatIcon, StopIcon, MusicalSymbolIcon } from './IconComponents';
 // import SequenceEditor from './SequenceEditor'; // Old editor, to be removed
 import ManualSequenceEditor from './ManualSequenceEditor'; // New
 import SequenceFeatures from './SequenceFeatures'; // New
@@ -1060,7 +1060,7 @@ const renderString = (index: number) => (
               ))}
             </div>
           )}
-		  	  <FingerLegend /> 
+			  <FingerLegend />
 		  <p style={{ textAlign: 'center', marginBottom: '20px', fontStyle: 'italic' }}>
 			Select a feature below or try the preloaded sequence.
 		  </p>
@@ -1075,14 +1075,14 @@ const renderString = (index: number) => (
 					style={{ ...iconButtonStyle, padding: '10px' }}
                     title={isPlaying ? "Pause" : "Play"}
 				  >
-					{isPlaying ? <PauseIcon style={{height: '24px', width: '24px'}} /> : <PlayIcon style={{height: '24px', width: '24px'}} />}
+					{isPlaying ? <PauseIcon /> : <PlayIcon />}
 				  </button>
 				  <button 
 					onClick={stopSequence}
 					style={{ ...iconButtonStyle, padding: '10px' }}
                     title="Stop"
 				  >
-					<StopIcon style={{height: '24px', width: '24px'}} />
+					<StopIcon />
 				  </button>
 				  <button 
 					  onClick={handlePlayCurrentChord}
@@ -1095,7 +1095,7 @@ const renderString = (index: number) => (
 					  }}
 					  title="Play Current Chord"
 					>
-					  <MusicalSymbolIcon style={{height: '24px', width: '24px'}} />
+					  <MusicalSymbolIcon />
 				  </button>
 				  <button 
 					onClick={toggleLoop}
@@ -1107,7 +1107,7 @@ const renderString = (index: number) => (
 					}}
                     title={isLooping ? "Disable Loop" : "Enable Loop"}
 				  >
-					<RepeatIcon style={{height: '20px', width: '20px'}} />
+					<RepeatIcon />
 				  </button>
 
 				</div>
@@ -1202,8 +1202,8 @@ const renderString = (index: number) => (
 		)}
 		
 		{!isInitialized && (
-		  <button 
-            onClick={initializeAudio} 
+		  <button
+            onClick={initializeAudio}
             style={{ marginTop: '20px', width: '100%', padding: '10px', backgroundColor: '#f0ad4e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
             Initialize Audio

@@ -42,11 +42,11 @@ export function generateChordSequence(key: string, progression: string): string 
       case 'v': return 4;
       case 'vi': return 5;
       case 'vii': return 6;
-      case 'bvii': return 7; 
-      case 'bvi': return 8;  
-      default: 
+      case 'bvii': return 7;
+      case 'bvi': return 8;
+      default:
         console.warn(`Unsupported chord step: ${step} in progression "${progression}". Defaulting to tonic.`);
-        return 0; 
+        return 0;
     }
   };
 
@@ -54,8 +54,8 @@ export function generateChordSequence(key: string, progression: string): string 
     const index = getChordIndex(step);
     let chordName = chords[index];
 
-    if (step === step.toLowerCase() && 
-        !chordName.includes('m') && 
+    if (step === step.toLowerCase() &&
+        !chordName.includes('m') &&
         !chordName.includes('dim')) {
       const upperStep = step.toUpperCase();
       if (!isMinorKey && (upperStep === 'II' || upperStep === 'III' || upperStep === 'VI')) {
