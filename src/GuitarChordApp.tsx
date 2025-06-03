@@ -150,6 +150,30 @@ const playAudioNoteWithAnimation = useCallback((
 	   useEffect(() => {
 	   initializeAudio();
 	   }, [initializeAudio]);
+
+  // getNote and getChordFunction are defined before updateChordData
+  const getNote = useCallback((stringNote: Note, fret: number): Note => {
+    const startIndex = NOTE_SEQUENCE.indexOf(stringNote);
+    return NOTE_SEQUENCE[(startIndex + fret) % 12];
+  }, []);
+
+  const getChordFunction = useCallback((note: Note, rootNoteValue: RootNote, chordTypeValue: ChordType): string => {
+    const interval = (NOTE_SEQUENCE.indexOf(note) - NOTE_SEQUENCE.indexOf(rootNoteValue) + 12) % 12;
+    switch (interval) {
+      case 0: return 'R';
+      case 2: return '2';
+      case 3: return chordTypeValue === 'minor' || chordTypeValue === 'm7' || chordTypeValue === 'dim' ? 'b3' : '3';
+      case 4: return '3';
+      case 5: return '4';
+      case 6: return chordTypeValue === 'dim' ? 'b5' : '4#';
+      case 7: return '5';
+      case 9: return '6';
+      case 10: return chordTypeValue === '7' || chordTypeValue === 'm7' || chordTypeValue === '7sus4' ? 'b7' : '7';
+      case 11: return '7';
+      default: return note;
+    }
+  }, []); // NOTE_SEQUENCE is a global constant, so no need to list it as a dep if it's truly global/static.
+           // If it were a prop or state, it would be needed. Assuming it's a top-level const.
 	   
   // Function to update chordData based on rootNote, chordType, available voicings and selected index
   const updateChordData = useCallback((root: RootNote, type: ChordType, currentVoicings: VoicingInfo[], currentIndex: number) => {
@@ -663,24 +687,7 @@ const handleSkipToEnd = () => {
     };
   }, []);
 
-
-
-  const getChordFunction = useCallback((note: Note, rootNote: RootNote, chordType: ChordType): string => {
-    const interval = (NOTE_SEQUENCE.indexOf(note) - NOTE_SEQUENCE.indexOf(rootNote) + 12) % 12;
-    switch (interval) {
-      case 0: return 'R';
-      case 2: return '2';
-      case 3: return chordType === 'minor' || chordType === 'm7' || chordType === 'dim' ? 'b3' : '3';
-      case 4: return '3';
-      case 5: return '4';
-      case 6: return chordType === 'dim' ? 'b5' : '4#';
-      case 7: return '5';
-      case 9: return '6';
-      case 10: return chordType === '7' || chordType === 'm7' || chordType === '7sus4' ? 'b7' : '7';
-      case 11: return '7';
-      default: return note;
-    }
-  }, []);
+  // getChordFunction was moved above updateChordData
 
   const getCurrentChordName = () => {
     const typeLabel = CHORD_TYPE_LABELS[chordType] || chordType;
