@@ -75,23 +75,28 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
     URL.revokeObjectURL(url);
   };
 
+  const primaryButtonClasses = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed";
+  const secondaryButtonClasses = "w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75";
+  const selectInputClasses = "w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm";
+
+
   return (
-    <div>
-      <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
-        <h4>Chord Sequence Generator</h4>
-        <p>{introTexts.progressionGeneratorInfo || "Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns."}</p>
-        <div style={{display: 'flex', gap: '10px', marginBottom: '10px'}}>
+    <div className="space-y-6">
+      <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
+        <h4 className="text-lg font-semibold mb-2 text-gray-700">Chord Sequence Generator</h4>
+        <p className="text-sm text-gray-600 mb-3">{introTexts.progressionGeneratorInfo || "Select a key and a common chord progression type (e.g., I-V-vi-IV) to automatically generate a chord sequence. This is a great way to explore new ideas or practice common patterns."}</p>
+        <div className="flex flex-col sm:flex-row gap-3 mb-3">
             <select 
             value={selectedKey} 
             onChange={(e) => setSelectedKey(e.target.value)}
-            style={{ flexGrow: 1 }}
+            className={`${selectInputClasses} sm:flex-grow`}
             >
             {KEYS.map(key => <option key={key} value={key}>{key}</option>)}
             </select>
             <select 
             value={selectedProgression} 
             onChange={(e) => setSelectedProgression(e.target.value)}
-            style={{ flexGrow: 1 }}
+            className={`${selectInputClasses} sm:flex-grow`}
             >
             <option value="">Select a progression</option>
             {chordProgressions.map((prog, index) => (
@@ -99,46 +104,55 @@ const SequenceFeatures: React.FC<SequenceFeaturesProps> = ({ onLoadSequenceToApp
             ))}
             </select>
         </div>
-        <button onClick={handleGenerateSequence} style={{width: '100%'}}>Generate & Load Sequence to App</button>
+        <button 
+            onClick={handleGenerateSequence} 
+            className={primaryButtonClasses}
+            disabled={!selectedProgression} // Disable if no progression is selected
+        >
+            Generate & Load Sequence to App
+        </button>
       </div>
 
-      <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
-        <h4>Stock Songs</h4>
-        <p>{introTexts.stockSongsInfo || "Explore our collection of pre-loaded song progressions. These carefully selected chord sequences represent popular songs across various genres. Use them to learn new songs, understand common chord progressions, or as inspiration for your own compositions."}</p>
+      <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
+        <h4 className="text-lg font-semibold mb-2 text-gray-700">Stock Songs</h4>
+        <p className="text-sm text-gray-600 mb-3">{introTexts.stockSongsInfo || "Explore our collection of pre-loaded song progressions. These carefully selected chord sequences represent popular songs across various genres. Use them to learn new songs, understand common chord progressions, or as inspiration for your own compositions."}</p>
         <select 
           value={selectedSong}
           onChange={handleStockSongSelection}
-          style={{ width: '100%', marginBottom: '10px' }}
+          className={`${selectInputClasses} mb-3`}
         >
           <option value="">Select a stock song</option>
           {stockSongs.songs.map((song, index) => (
             <option key={index} value={song.title}>{song.title}</option>
           ))}
         </select>
-        {/* The selected song is automatically loaded via onChange */}
+        {/* The selected song is automatically loaded via onChange, no separate button needed here */}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
-        <input
-          type="file"
-          ref={fileInputRef}
-          style={{ display: 'none' }}
-          onChange={handleImport}
-          accept=".txt, .chords"
-        />
-        <button onClick={() => fileInputRef.current?.click()}>Import & Load Sequence</button>
-        <button onClick={handleExport}>Export Current App Sequence</button>
+      <div className="p-4 border border-gray-200 rounded-lg shadow-sm">
+        <h4 className="text-lg font-semibold mb-2 text-gray-700">Import / Export</h4>
+        <div className="flex flex-col sm:flex-row gap-3">
+            <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleImport}
+            accept=".txt,.chords,.sequence" // More specific accept types
+            />
+            <button onClick={() => fileInputRef.current?.click()} className={secondaryButtonClasses}>Import & Load Sequence</button>
+            <button onClick={handleExport} className={secondaryButtonClasses}>Export Current App Sequence</button>
+        </div>
       </div>
 
-      <div>
-        <h4>Strumming Pattern Guide</h4>
-        <p style={{fontSize: '0.9em', color: '#555'}}>
-          In the "Edit Sequence" modal, you can define strumming patterns or chord durations.
-          <br />- Use <strong>D for downstrokes</strong> and <strong>U for upstrokes</strong> within parentheses, e.g., <code>C(D D U D)</code>.
-          <br />- Alternatively, specify a <strong>numeric duration</strong> in beats, e.g., <code>Am(4)</code>.
-          <br />- You can add labels like <code>Verse:</code> or <code>Chorus:</code> before a series of chords.
-          <br />- Example: <code>Verse: G(D U D U) C(4) Em(D D)</code>
-        </p>
+      <div className="p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
+        <h4 className="text-lg font-semibold mb-2 text-gray-700">Strumming Pattern Guide</h4>
+        <div className="text-xs text-gray-600 space-y-1">
+            <p>In the "Edit Sequence" modal, you can define strumming patterns or chord durations.</p>
+            <p>- Use <strong>D for downstrokes</strong> and <strong>U for upstrokes</strong> within parentheses, e.g., <code>C(D D U D)</code>.</p>
+            <p>- Alternatively, specify a <strong>numeric duration</strong> in beats, e.g., <code>Am(4)</code>.</p>
+            <p>- You can add labels like <code>Verse:</code> or <code>Chorus:</code> before a series of chords.</p>
+            <p>- Example: <code>Verse: G(D U D U) C(4) Em(D D)</code></p>
+        </div>
       </div>
     </div>
   );

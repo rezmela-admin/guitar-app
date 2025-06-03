@@ -9,25 +9,7 @@ interface AdvancedPlaybackControlsProps {
   isPlaying: boolean;
 }
 
-// Define a basic style for the buttons, similar to iconButtonStyle in GuitarChordApp
-const controlButtonStyle: React.CSSProperties = {
-  backgroundColor: 'transparent',
-  border: '1px solid #ccc', // Add a border to make them look more like typical buttons in a modal
-  cursor: 'pointer',
-  padding: '10px 15px', // Make them a bit larger
-  margin: '5px',
-  borderRadius: '4px', // Standard border radius
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center', // Center content (icon + text)
-  minWidth: '180px', // Ensure buttons have a decent width for text + icon, adjusted
-};
-
-const iconStyle: React.CSSProperties = {
-    marginRight: '8px', // Space between icon and text
-    display: 'inline-flex', // Helps with alignment
-    verticalAlign: 'middle', // Align icon vertically with text
-};
+// controlButtonStyle and iconStyle are no longer needed as Tailwind classes will be used directly.
 
 const AdvancedPlaybackControls: React.FC<AdvancedPlaybackControlsProps> = ({
   onStepBackward,
@@ -36,19 +18,22 @@ const AdvancedPlaybackControls: React.FC<AdvancedPlaybackControlsProps> = ({
   onSkipToEnd,
   isPlaying,
 }) => {
+  const commonButtonClasses = "w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed";
+  const iconClasses = "h-5 w-5 mr-2"; // Tailwind classes for icon size and margin
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '10px' }}>
-      <button onClick={onSkipToStart} disabled={isPlaying} style={controlButtonStyle}>
-        <span style={iconStyle}><SkipToStartIcon /></span> Skip to Start
+    <div className="flex flex-col space-y-3 p-1"> {/* Added small padding to the container for better spacing from modal edges */}
+      <button onClick={onSkipToStart} disabled={isPlaying} className={commonButtonClasses}>
+        <SkipToStartIcon className={iconClasses} /> Skip to Start
       </button>
-      <button onClick={onStepBackward} disabled={isPlaying} style={controlButtonStyle}>
-        <span style={iconStyle}><StepBackwardIcon /></span> Step Backward
+      <button onClick={onStepBackward} disabled={isPlaying} className={commonButtonClasses}>
+        <StepBackwardIcon className={iconClasses} /> Step Backward
       </button>
-      <button onClick={onStepForward} disabled={isPlaying} style={controlButtonStyle}>
-        <span style={iconStyle}><StepForwardIcon /></span> Step Forward
+      <button onClick={onStepForward} disabled={isPlaying} className={commonButtonClasses}>
+        <StepForwardIcon className={iconClasses} /> Step Forward
       </button>
-      <button onClick={onSkipToEnd} disabled={isPlaying} style={controlButtonStyle}>
-        <span style={iconStyle}><SkipToEndIcon /></span> Skip to End
+      <button onClick={onSkipToEnd} disabled={isPlaying} className={commonButtonClasses}>
+        <SkipToEndIcon className={iconClasses} /> Skip to End
       </button>
     </div>
   );

@@ -52,23 +52,24 @@ const ManualSequenceEditor: React.FC<ManualSequenceEditorProps> = ({ currentSequ
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <textarea
         ref={textAreaRef}
         value={localChordSequence}
         onChange={handleTextChange}
-        style={{ width: '100%', minHeight: '150px', marginBottom: '10px', border: `1px solid ${isLocalSequenceValid ? (isDirty ? 'orange' : 'gray') : 'red'}` }}
+        className={`w-full min-h-[150px] p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 
+                    ${!isLocalSequenceValid ? 'border-red-500 ring-red-500' : (isDirty ? 'border-orange-500' : 'border-gray-300')}`}
         placeholder="Enter your chord sequence here, e.g., Verse: C(D D U D) G(D U D U) Am(D D U D) F(D U D U)"
       />
-      {!isLocalSequenceValid && <p style={{color: 'red', marginTop: '-10px', marginBottom: '10px'}}>Warning: The current sequence has an invalid format.</p>}
+      {!isLocalSequenceValid && <p className="text-sm text-red-600 -mt-2 mb-2">Warning: The current sequence has an invalid format.</p>}
       <button 
         onClick={handleLoadSequenceForPlayback} 
         disabled={!isDirty || !isLocalSequenceValid}
-        style={{ display: 'block', width: '100%'}}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Load Edited Sequence to App
       </button>
-      {isDirty && <p style={{fontStyle: 'italic', fontSize: '0.9em', marginTop: '5px'}}>You have unsaved changes in the editor.</p>}
+      {isDirty && <p className="text-xs text-gray-500 italic mt-1">You have unsaved changes in the editor.</p>}
     </div>
   );
 };

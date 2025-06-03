@@ -13,40 +13,21 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000, // Ensure modal is on top
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        minWidth: '300px', // Minimum width
-        maxWidth: '90%',  // Maximum width
-        maxHeight: '90%', // Maximum height
-        overflowY: 'auto', // Scroll if content overflows
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h2 style={{ margin: 0 }}>{title}</h2>
-          <button onClick={onClose} style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '1.5rem',
-            cursor: 'pointer',
-          }}>
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 sm:p-6 md:p-8 transition-opacity duration-300 ease-in-out">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] flex flex-col"> {/* Added max-h and flex structure */}
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
+          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">{title}</h2>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-800 text-3xl font-light leading-none p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            aria-label="Close modal"
+          >
             &times;
           </button>
         </div>
-        <div>{children}</div>
+        <div className="overflow-y-auto"> {/* Made content area scrollable */}
+          {children}
+        </div>
       </div>
     </div>
   );
