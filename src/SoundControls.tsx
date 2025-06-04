@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import InstrumentSelector from './components/InstrumentSelector';
 import { Preset } from './soundPresets'; // Corrected path
 

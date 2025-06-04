@@ -16,7 +16,7 @@ import Modal from './Modal'; // Import the Modal component
 // import { introTexts } from './appIntroTexts'; // Already removed, ensure it stays removed
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
-import { soundPresets, Preset } from './soundPresets'; // Import presets
+import { soundPresets } from './soundPresets'; // Import presets (Preset type removed)
 
 const GuitarChordApp: React.FC = () => {
 
@@ -1316,7 +1316,7 @@ const renderString = (index: number) => (
 		{showSoundSettingsModal && (
 		  <Modal title="Sound Settings" isOpen={showSoundSettingsModal} onClose={() => setShowSoundSettingsModal(false)}>
 			<SoundControls
-			  playStyle={playStyle} // Pass existing playstyle controls
+			  playStyle={playStyle}
 			  setPlayStyle={wrapSetter(setPlayStyle)}
 			  bassLevel={bassLevel}
 			  setBassLevel={wrapSetter(setBassLevel)}
