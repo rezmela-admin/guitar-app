@@ -1,4 +1,5 @@
 import React from 'react';
+import InstrumentSelector from './components/InstrumentSelector'; // Import InstrumentSelector
 
 // Utility functions for logarithmic scaling
 const logScale = (position: number, min: number, max: number) => {
@@ -14,8 +15,6 @@ const logPosition = (value: number, min: number, max: number) => {
   const scale = (maxv - minv) / 100;
   return (Math.log(value) - minv) / scale;
 };
-
-import InstrumentSelector from './components/InstrumentSelector'; // Import InstrumentSelector
 
 interface SoundControlsProps {
   playStyle: 'strum' | 'arpeggio';
