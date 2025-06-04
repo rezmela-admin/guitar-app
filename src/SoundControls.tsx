@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import InstrumentSelector from './components/InstrumentSelector';
-import { Preset } from '../soundPresets'; // Assuming Preset interface is exported from soundPresets.ts
+import { Preset } from './soundPresets'; // Corrected path
 
 // Utility functions for logarithmic scaling
 const logScale = (position: number, min: number, max: number) => {
