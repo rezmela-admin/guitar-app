@@ -1316,7 +1316,6 @@ const renderString = (index: number) => (
 		{showSoundSettingsModal && (
 		  <Modal title="Sound Settings" isOpen={showSoundSettingsModal} onClose={() => setShowSoundSettingsModal(false)}>
 			<SoundControls
-			  playStyle={playStyle}
 			  playStyle={playStyle} // Pass existing playstyle controls
 			  setPlayStyle={wrapSetter(setPlayStyle)}
 			  bassLevel={bassLevel}
