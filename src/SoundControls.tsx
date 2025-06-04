@@ -15,7 +15,7 @@ const logPosition = (value: number, min: number, max: number) => {
   return (Math.log(value) - minv) / scale;
 };
 
-import InstrumentSelector from './InstrumentSelector'; // Import InstrumentSelector
+import InstrumentSelector from './components/InstrumentSelector'; // Import InstrumentSelector
 
 interface SoundControlsProps {
   playStyle: 'strum' | 'arpeggio';
