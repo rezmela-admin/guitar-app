@@ -79,6 +79,10 @@ describe('SoundControls', () => {
     filterResonance: 1, setFilterResonance: mockSetFilterResonance,
     filterType: 'lowpass' as BiquadFilterType, setFilterType: mockSetFilterType,
     stereoWidth: 0, setStereoWidth: mockSetStereoWidth,
+    // Preset props
+    presets: [], // Default to an empty array of presets
+    selectedPresetName: "", // Default to no preset selected
+    onPresetChange: jest.fn(), // Mock function for preset change handler
   };
 
   beforeEach(() => {
