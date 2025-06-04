@@ -1,5 +1,4 @@
-import React from 'react';
-import React, { useState } from 'react'; // Added useState for local state if needed, but not for this change
+import React, { useState } from 'react';
 import InstrumentSelector from './components/InstrumentSelector';
 import { Preset } from '../soundPresets'; // Assuming Preset interface is exported from soundPresets.ts
 
