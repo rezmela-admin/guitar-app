@@ -51,10 +51,25 @@ const GuitarChordApp: React.FC = () => {
   const [decayTime, setDecayTime] = useState(0.15);
   const [sustainLevel, setSustainLevel] = useState(0.2);
   const [releaseTime, setReleaseTime] = useState(0.3);
-  const [reverbSendLevel, setReverbSendLevel] = useState(0.4); // Added
-  const [reverbOutputLevel, setReverbOutputLevel] = useState(0.7); // Added
+  const [reverbSendLevel, setReverbSendLevel] = useState(0.0); // Default to dry for Tone.js effects
+  const [reverbOutputLevel, setReverbOutputLevel] = useState(0.7); // Sampler specific, Tone.js reverb output is via masterVolume
   const [isChordPlaying, setIsChordPlaying] = useState(false);
+  const [selectedInstrument, setSelectedInstrument] = useState<string>('sampler'); // Default to sampler
   const [chordPlaySpeed, setChordPlaySpeed] = useState(11);
+  // EQ states
+  const [lowGain, setLowGain] = useState(0); // dB
+  const [midGain, setMidGain] = useState(0); // dB
+  const [highGain, setHighGain] = useState(0); // dB
+  // Chorus states
+  const [chorusRate, setChorusRate] = useState(1.5); // Hz
+  const [chorusDepth, setChorusDepth] = useState(0.7); // 0-1
+  const [chorusWet, setChorusWet] = useState(0.0); // 0-1, default dry
+  // Filter states
+  const [filterCutoff, setFilterCutoff] = useState(15000); // Hz
+  const [filterResonance, setFilterResonance] = useState(1); // Q
+  const [filterType, setFilterType] = useState<BiquadFilterType>('lowpass');
+  // Stereo Widener states
+  const [stereoWidth, setStereoWidth] = useState(0.0); // 0-1, default mono
   const [upstrokeSpeedFactor, setUpstrokeSpeedFactor] = useState(2.0);
   const [duration, setDuration] = useState(495);
   const [arpeggioBaseDuration, setArpeggioBaseDuration] = useState(350);
@@ -120,7 +135,26 @@ const validateSequence = (sequence: string): boolean => {
     initializeAudio, 
     isInitialized, 
     errorMessage 
-  } = useAudioSamples();
+  } = useAudioSamples({ // Pass props object
+    instrument: selectedInstrument,
+    volume,
+    attackTime,
+    decayTime,
+    sustainLevel,
+    releaseTime,
+    reverbSendLevel, // For Tone.Reverb wetness & sampler send
+    reverbOutputLevel, // For sampler reverb output gain
+    lowGain,
+    midGain,
+    highGain,
+    chorusRate,
+    chorusDepth,
+    chorusWet,
+    filterCutoff,
+    filterResonance,
+    filterType,
+    stereoWidth,
+  });
 
   
 const playAudioNoteWithAnimation = useCallback((
@@ -711,6 +745,18 @@ const handleSkipToEnd = () => {
 //   // you can do so here
 // };
 
+const handleInstrumentChange = (newInstrument: string) => {
+  setSelectedInstrument(newInstrument);
+  // The useAudioSamples hook's useEffect for props.instrument will handle re-initialization or instrument switching.
+  // We might need to explicitly call initializeAudio if the instrument type changes between 'sampler' and Tone.js types,
+  // as they have different initialization paths.
+  if (initializeAudio) {
+    // Call initializeAudio to ensure the new instrument type (sampler vs Tone.js) is correctly initialized.
+    // The hook itself will decide based on the new 'instrument' prop value.
+    initializeAudio();
+  }
+};
+
 const renderCurrentInfo = () => {
   if (chordSequence) { // Always try to display the sequence text
     const chords = parseChordSequence(chordSequence); // Parse it for display
@@ -1212,6 +1258,22 @@ const renderString = (index: number) => (
 			  setUpstrokeSpeedFactor={setUpstrokeSpeedFactor}
 			  arpeggioBaseDuration={arpeggioBaseDuration}
 			  setArpeggioBaseDuration={setArpeggioBaseDuration}
+			  selectedInstrument={selectedInstrument}
+			  onInstrumentChange={handleInstrumentChange}
+        // EQ
+        lowGain={lowGain} setLowGain={setLowGain}
+        midGain={midGain} setMidGain={setMidGain}
+        highGain={highGain} setHighGain={setHighGain}
+        // Chorus
+        chorusRate={chorusRate} setChorusRate={setChorusRate}
+        chorusDepth={chorusDepth} setChorusDepth={setChorusDepth}
+        chorusWet={chorusWet} setChorusWet={setChorusWet}
+        // Filter
+        filterCutoff={filterCutoff} setFilterCutoff={setFilterCutoff}
+        filterResonance={filterResonance} setFilterResonance={setFilterResonance}
+        filterType={filterType} setFilterType={setFilterType}
+        // Stereo Widener
+        stereoWidth={stereoWidth} setStereoWidth={setStereoWidth}
 			/>
 		  </Modal>
 		)}

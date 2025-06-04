@@ -15,6 +15,8 @@ const logPosition = (value: number, min: number, max: number) => {
   return (Math.log(value) - minv) / scale;
 };
 
+import InstrumentSelector from './InstrumentSelector'; // Import InstrumentSelector
+
 interface SoundControlsProps {
   playStyle: 'strum' | 'arpeggio';
   setPlayStyle: React.Dispatch<React.SetStateAction<'strum' | 'arpeggio'>>;
@@ -42,6 +44,32 @@ interface SoundControlsProps {
   setUpstrokeSpeedFactor: React.Dispatch<React.SetStateAction<number>>;
   arpeggioBaseDuration: number;
   setArpeggioBaseDuration: React.Dispatch<React.SetStateAction<number>>;
+  selectedInstrument: string;
+  onInstrumentChange: (instrument: string) => void;
+  // EQ settings
+  lowGain: number;
+  setLowGain: React.Dispatch<React.SetStateAction<number>>;
+  midGain: number;
+  setMidGain: React.Dispatch<React.SetStateAction<number>>;
+  highGain: number;
+  setHighGain: React.Dispatch<React.SetStateAction<number>>;
+  // Chorus settings
+  chorusRate: number;
+  setChorusRate: React.Dispatch<React.SetStateAction<number>>;
+  chorusDepth: number;
+  setChorusDepth: React.Dispatch<React.SetStateAction<number>>;
+  chorusWet: number;
+  setChorusWet: React.Dispatch<React.SetStateAction<number>>;
+  // Filter settings
+  filterCutoff: number;
+  setFilterCutoff: React.Dispatch<React.SetStateAction<number>>;
+  filterResonance: number;
+  setFilterResonance: React.Dispatch<React.SetStateAction<number>>;
+  filterType: BiquadFilterType;
+  setFilterType: React.Dispatch<React.SetStateAction<BiquadFilterType>>;
+  // Stereo Widener settings
+  stereoWidth: number;
+  setStereoWidth: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const SoundControls: React.FC<SoundControlsProps> = ({
@@ -71,6 +99,22 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   setUpstrokeSpeedFactor,
   arpeggioBaseDuration,
   setArpeggioBaseDuration,
+  selectedInstrument,
+  onInstrumentChange,
+  // EQ
+  lowGain, setLowGain,
+  midGain, setMidGain,
+  highGain, setHighGain,
+  // Chorus
+  chorusRate, setChorusRate,
+  chorusDepth, setChorusDepth,
+  chorusWet, setChorusWet,
+  // Filter
+  filterCutoff, setFilterCutoff,
+  filterResonance, setFilterResonance,
+  filterType, setFilterType,
+  // Stereo Widener
+  stereoWidth, setStereoWidth,
 }) => {
   // Basic inline styles to replace Tailwind classes
   const containerStyle: React.CSSProperties = {
@@ -137,11 +181,68 @@ const SoundControls: React.FC<SoundControlsProps> = ({
 
   // Dynamic label for chordPlaySpeed
   const speedLabel = chordPlaySpeed < 120 ? "Faster" : chordPlaySpeed > 250 ? "Slower" : "Normal";
+  const filterTypeOptions: BiquadFilterType[] = ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "notch", "allpass"];
 
   return (
     <div style={containerStyle}>
       <h3 style={headingStyle}>Sound Customization</h3>
 
+      <InstrumentSelector
+        selectedInstrument={selectedInstrument}
+        onInstrumentChange={onInstrumentChange}
+      />
+
+      {/* Only show Tone.js specific effects if a Tone.js instrument is selected */}
+      {selectedInstrument !== 'sampler' && (
+        <>
+          <h4 style={subHeadingStyle}>Tone.js Effects</h4>
+          {/* EQ3 Controls */}
+          <div style={controlGroupStyle}>
+            <label htmlFor="lowGain" style={labelStyle}>Low Gain (EQ): <span style={valueDisplayStyle}>{lowGain.toFixed(1)} dB</span></label>
+            <input type="range" id="lowGain" min="-12" max="12" step="0.5" value={lowGain} onChange={(e) => setLowGain(parseFloat(e.target.value))} style={rangeInputStyle} />
+
+            <label htmlFor="midGain" style={labelStyle}>Mid Gain (EQ): <span style={valueDisplayStyle}>{midGain.toFixed(1)} dB</span></label>
+            <input type="range" id="midGain" min="-12" max="12" step="0.5" value={midGain} onChange={(e) => setMidGain(parseFloat(e.target.value))} style={rangeInputStyle} />
+
+            <label htmlFor="highGain" style={labelStyle}>High Gain (EQ): <span style={valueDisplayStyle}>{highGain.toFixed(1)} dB</span></label>
+            <input type="range" id="highGain" min="-12" max="12" step="0.5" value={highGain} onChange={(e) => setHighGain(parseFloat(e.target.value))} style={rangeInputStyle} />
+          </div>
+
+          {/* Chorus Controls */}
+          <div style={controlGroupStyle}>
+            <label htmlFor="chorusRate" style={labelStyle}>Chorus Rate: <span style={valueDisplayStyle}>{chorusRate.toFixed(1)} Hz</span></label>
+            <input type="range" id="chorusRate" min="0.1" max="10" step="0.1" value={chorusRate} onChange={(e) => setChorusRate(parseFloat(e.target.value))} style={rangeInputStyle} />
+
+            <label htmlFor="chorusDepth" style={labelStyle}>Chorus Depth: <span style={valueDisplayStyle}>{(chorusDepth * 100).toFixed(0)}%</span></label>
+            <input type="range" id="chorusDepth" min="0" max="1" step="0.05" value={chorusDepth} onChange={(e) => setChorusDepth(parseFloat(e.target.value))} style={rangeInputStyle} />
+
+            <label htmlFor="chorusWet" style={labelStyle}>Chorus Wet: <span style={valueDisplayStyle}>{(chorusWet * 100).toFixed(0)}%</span></label>
+            <input type="range" id="chorusWet" min="0" max="1" step="0.05" value={chorusWet} onChange={(e) => setChorusWet(parseFloat(e.target.value))} style={rangeInputStyle} />
+          </div>
+
+          {/* Filter Controls */}
+          <div style={controlGroupStyle}>
+            <label htmlFor="filterType" style={labelStyle}>Filter Type:</label>
+            <select id="filterType" value={filterType} onChange={(e) => setFilterType(e.target.value as BiquadFilterType)} style={selectStyle}>
+              {filterTypeOptions.map(type => <option key={type} value={type}>{type}</option>)}
+            </select>
+
+            <label htmlFor="filterCutoff" style={labelStyle}>Filter Cutoff: <span style={valueDisplayStyle}>{filterCutoff.toFixed(0)} Hz</span></label>
+            <input type="range" id="filterCutoff" min="20" max="20000" step="10" value={logPosition(filterCutoff, 20, 20000)} onChange={(e) => setFilterCutoff(logScale(Number(e.target.value), 20, 20000))} style={rangeInputStyle} />
+
+            <label htmlFor="filterResonance" style={labelStyle}>Filter Resonance (Q): <span style={valueDisplayStyle}>{filterResonance.toFixed(1)}</span></label>
+            <input type="range" id="filterResonance" min="0.1" max="20" step="0.1" value={filterResonance} onChange={(e) => setFilterResonance(parseFloat(e.target.value))} style={rangeInputStyle} />
+          </div>
+
+          {/* Stereo Widener Controls */}
+          <div style={controlGroupStyle}>
+            <label htmlFor="stereoWidth" style={labelStyle}>Stereo Width: <span style={valueDisplayStyle}>{(stereoWidth * 100).toFixed(0)}%</span></label>
+            <input type="range" id="stereoWidth" min="0" max="1" step="0.05" value={stereoWidth} onChange={(e) => setStereoWidth(parseFloat(e.target.value))} style={rangeInputStyle} />
+          </div>
+        </>
+      )}
+
+      <h4 style={subHeadingStyle}>General Sound Settings</h4>
       <div style={controlGroupStyle}>
         <label htmlFor="playStyle" style={labelStyle}>
           Play Style
