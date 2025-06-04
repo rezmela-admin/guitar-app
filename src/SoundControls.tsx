@@ -227,7 +227,18 @@ const SoundControls: React.FC<SoundControlsProps> = ({
             </select>
 
             <label htmlFor="filterCutoff" style={labelStyle}>Filter Cutoff: <span style={valueDisplayStyle}>{filterCutoff.toFixed(0)} Hz</span></label>
-            <input type="range" id="filterCutoff" min="20" max="20000" step="10" value={logPosition(filterCutoff, 20, 20000)} onChange={(e) => setFilterCutoff(logScale(Number(e.target.value), 20, 20000))} style={rangeInputStyle} />
+            <input type="range" id="filterCutoff" min="0" max="100" /* Slider position 0-100 */ value={logPosition(filterCutoff, 20, 20000)} onChange={(e) => {
+              const sliderPosition = Number(e.target.value);
+              let newValue = logScale(sliderPosition, 20, 20000);
+              let clampedValue = newValue;
+              if (!isFinite(newValue)) {
+                console.warn(`Calculated non-finite filterCutoff: ${newValue}, clamping to default.`);
+                clampedValue = 15000; // Default or last known good value
+              } else {
+                clampedValue = Math.max(20, Math.min(20000, newValue));
+              }
+              setFilterCutoff(clampedValue);
+            }} style={rangeInputStyle} />
 
             <label htmlFor="filterResonance" style={labelStyle}>Filter Resonance (Q): <span style={valueDisplayStyle}>{filterResonance.toFixed(1)}</span></label>
             <input type="range" id="filterResonance" min="0.1" max="20" step="0.1" value={filterResonance} onChange={(e) => setFilterResonance(parseFloat(e.target.value))} style={rangeInputStyle} />
