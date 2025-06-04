@@ -16,6 +16,7 @@ import Modal from './Modal'; // Import the Modal component
 // import { introTexts } from './appIntroTexts'; // Already removed, ensure it stays removed
 import { AnimationLayer, triggerNoteAnimation, resetAnimations, animationStyles } from './ChordAnimations';
 import { chordFingerData, fingerColors } from './ChordFingerData';
+import { soundPresets, Preset } from './soundPresets'; // Import presets
 
 const GuitarChordApp: React.FC = () => {
 
@@ -70,6 +71,8 @@ const GuitarChordApp: React.FC = () => {
   const [filterType, setFilterType] = useState<BiquadFilterType>('lowpass');
   // Stereo Widener states
   const [stereoWidth, setStereoWidth] = useState(0.0); // 0-1, default mono
+  const [selectedPresetName, setSelectedPresetName] = useState<string>(""); // For preset selection UI
+
   const [upstrokeSpeedFactor, setUpstrokeSpeedFactor] = useState(2.0);
   const [duration, setDuration] = useState(495);
   const [arpeggioBaseDuration, setArpeggioBaseDuration] = useState(350);
@@ -745,15 +748,96 @@ const handleSkipToEnd = () => {
 //   // you can do so here
 // };
 
+const handleManualControlChange = () => {
+  setSelectedPresetName(""); // Clear preset name when any manual change occurs
+};
+
+// Wrap state setters to call handleManualControlChange
+const wrapSetter = <T,>(setter: React.Dispatch<React.SetStateAction<T>>): React.Dispatch<React.SetStateAction<T>> => {
+  return (value: React.SetStateAction<T>) => {
+    setter(value);
+    handleManualControlChange();
+  };
+};
+
+const wrappedSetVolume = wrapSetter(setVolume);
+const wrappedSetAttackTime = wrapSetter(setAttackTime);
+const wrappedSetDecayTime = wrapSetter(setDecayTime);
+const wrappedSetSustainLevel = wrapSetter(setSustainLevel);
+const wrappedSetReleaseTime = wrapSetter(setReleaseTime);
+const wrappedSetReverbSendLevel = wrapSetter(setReverbSendLevel);
+const wrappedSetReverbOutputLevel = wrapSetter(setReverbOutputLevel);
+const wrappedSetLowGain = wrapSetter(setLowGain);
+const wrappedSetMidGain = wrapSetter(setMidGain);
+const wrappedSetHighGain = wrapSetter(setHighGain);
+const wrappedSetChorusRate = wrapSetter(setChorusRate);
+const wrappedSetChorusDepth = wrapSetter(setChorusDepth);
+const wrappedSetChorusWet = wrapSetter(setChorusWet);
+const wrappedSetFilterCutoff = wrapSetter(setFilterCutoff);
+const wrappedSetFilterResonance = wrapSetter(setFilterResonance);
+const wrappedSetFilterType = wrapSetter(setFilterType);
+const wrappedSetStereoWidth = wrapSetter(setStereoWidth);
+// Note: setSelectedInstrument is handled slightly differently as it might also trigger initializeAudio
+
 const handleInstrumentChange = (newInstrument: string) => {
   setSelectedInstrument(newInstrument);
-  // The useAudioSamples hook's useEffect for props.instrument will handle re-initialization or instrument switching.
-  // We might need to explicitly call initializeAudio if the instrument type changes between 'sampler' and Tone.js types,
-  // as they have different initialization paths.
+  handleManualControlChange(); // Also a manual change
   if (initializeAudio) {
-    // Call initializeAudio to ensure the new instrument type (sampler vs Tone.js) is correctly initialized.
-    // The hook itself will decide based on the new 'instrument' prop value.
     initializeAudio();
+  }
+};
+
+
+const applyPreset = (presetName: string) => {
+  const preset = soundPresets.find(p => p.name === presetName);
+  if (preset) {
+    setSelectedInstrument(preset.selectedInstrument);
+    setAttackTime(preset.attackTime);
+    setDecayTime(preset.decayTime);
+    setSustainLevel(preset.sustainLevel);
+    setReleaseTime(preset.releaseTime);
+    setVolume(preset.volume);
+    setReverbSendLevel(preset.reverbSendLevel);
+    setReverbOutputLevel(preset.reverbOutputLevel);
+    setLowGain(preset.lowGain);
+    setMidGain(preset.midGain);
+    setHighGain(preset.highGain);
+    setChorusRate(preset.chorusRate);
+    setChorusDepth(preset.chorusDepth);
+    setChorusWet(preset.chorusWet);
+    setFilterCutoff(preset.filterCutoff);
+    setFilterResonance(preset.filterResonance);
+    setFilterType(preset.filterType);
+    setStereoWidth(preset.stereoWidth);
+
+    setSelectedPresetName(presetName); // Set this last
+
+    // If instrument changed, ensure audio re-initializes correctly
+    // This check is important because setSelectedInstrument alone might not trigger
+    // the useAudioSamples hook's instrument prop dependency if the value is the same,
+    // but other preset values have changed.
+    // However, handleInstrumentChange already calls initializeAudio.
+    // If the preset's instrument is different from the current one,
+    // handleInstrumentChange would be called by SoundControls.
+    // If it's the same, we might still need to ensure re-initialization for other params.
+    // The useAudioSamples hook should ideally react to all relevant prop changes.
+    // A direct call to initializeAudio here might be redundant if selectedInstrument itself changes and triggers it.
+    // For safety, if the instrument in the preset is different from current,
+    // handleInstrumentChange (which calls initializeAudio) should be used.
+    // If the instrument is the same, the props to useAudioSamples will update and its internal useEffects should handle it.
+    if (selectedInstrument !== preset.selectedInstrument) {
+        // The instrument change will trigger re-initialization through its own handler
+        // which now also calls handleManualControlChange, so we set preset name again.
+        // This is a bit convoluted. Simpler: applyPreset sets all values *then* selectedPresetName.
+        // The instrument change should be handled by the InstrumentSelector's onChange prop.
+    } else if (initializeAudio) {
+        // If instrument is the same, but other params changed, ensure Tone.js pipeline updates.
+        // Most updates are handled by useEffects in useAudioSamples watching individual props.
+        // A targeted re-init or update function in the hook might be cleaner.
+        // For now, initializeAudio() should be safe if it's idempotent or handles this.
+        initializeAudio();
+    }
+
   }
 };
 
@@ -1233,47 +1317,52 @@ const renderString = (index: number) => (
 		  <Modal title="Sound Settings" isOpen={showSoundSettingsModal} onClose={() => setShowSoundSettingsModal(false)}>
 			<SoundControls
 			  playStyle={playStyle}
-			  setPlayStyle={setPlayStyle}
+			  playStyle={playStyle} // Pass existing playstyle controls
+			  setPlayStyle={wrapSetter(setPlayStyle)}
 			  bassLevel={bassLevel}
-			  setBassLevel={setBassLevel}
+			  setBassLevel={wrapSetter(setBassLevel)}
 			  volume={volume}
-			  setVolume={setVolume}
+			  setVolume={wrappedSetVolume}
 			  attackTime={attackTime}
-			  setAttackTime={setAttackTime}
+			  setAttackTime={wrappedSetAttackTime}
 			  decayTime={decayTime}
-			  setDecayTime={setDecayTime}
+			  setDecayTime={wrappedSetDecayTime}
 			  sustainLevel={sustainLevel}
-			  setSustainLevel={setSustainLevel}
+			  setSustainLevel={wrappedSetSustainLevel}
 			  releaseTime={releaseTime}
-			  setReleaseTime={setReleaseTime}
-			  chordPlaySpeed={chordPlaySpeed}
-			  setChordPlaySpeed={setChordPlaySpeed}
-			  duration={duration}
-			  setDuration={setDuration}
+			  setReleaseTime={wrappedSetReleaseTime}
+			  chordPlaySpeed={chordPlaySpeed} // Not timbre related, not wrapped
+			  setChordPlaySpeed={setChordPlaySpeed} // Not timbre related, not wrapped
+			  duration={duration} // Not timbre related, not wrapped
+			  setDuration={setDuration} // Not timbre related, not wrapped
 			  reverbSendLevel={reverbSendLevel}
-			  setReverbSendLevel={setReverbSendLevel}
+			  setReverbSendLevel={wrappedSetReverbSendLevel}
 			  reverbOutputLevel={reverbOutputLevel}
-			  setReverbOutputLevel={setReverbOutputLevel}
-			  upstrokeSpeedFactor={upstrokeSpeedFactor}
-			  setUpstrokeSpeedFactor={setUpstrokeSpeedFactor}
-			  arpeggioBaseDuration={arpeggioBaseDuration}
-			  setArpeggioBaseDuration={setArpeggioBaseDuration}
+			  setReverbOutputLevel={wrappedSetReverbOutputLevel}
+			  upstrokeSpeedFactor={upstrokeSpeedFactor} // Not timbre related
+			  setUpstrokeSpeedFactor={setUpstrokeSpeedFactor} // Not timbre related
+			  arpeggioBaseDuration={arpeggioBaseDuration} // Not timbre related
+			  setArpeggioBaseDuration={setArpeggioBaseDuration} // Not timbre related
 			  selectedInstrument={selectedInstrument}
-			  onInstrumentChange={handleInstrumentChange}
+			  onInstrumentChange={handleInstrumentChange} // Special handling already in place
         // EQ
-        lowGain={lowGain} setLowGain={setLowGain}
-        midGain={midGain} setMidGain={setMidGain}
-        highGain={highGain} setHighGain={setHighGain}
+        lowGain={lowGain} setLowGain={wrappedSetLowGain}
+        midGain={midGain} setMidGain={wrappedSetMidGain}
+        highGain={highGain} setHighGain={wrappedSetHighGain}
         // Chorus
-        chorusRate={chorusRate} setChorusRate={setChorusRate}
-        chorusDepth={chorusDepth} setChorusDepth={setChorusDepth}
-        chorusWet={chorusWet} setChorusWet={setChorusWet}
+        chorusRate={chorusRate} setChorusRate={wrappedSetChorusRate}
+        chorusDepth={chorusDepth} setChorusDepth={wrappedSetChorusDepth}
+        chorusWet={chorusWet} setChorusWet={wrappedSetChorusWet}
         // Filter
-        filterCutoff={filterCutoff} setFilterCutoff={setFilterCutoff}
-        filterResonance={filterResonance} setFilterResonance={setFilterResonance}
-        filterType={filterType} setFilterType={setFilterType}
+        filterCutoff={filterCutoff} setFilterCutoff={wrappedSetFilterCutoff}
+        filterResonance={filterResonance} setFilterResonance={wrappedSetFilterResonance}
+        filterType={filterType} setFilterType={wrappedSetFilterType}
         // Stereo Widener
-        stereoWidth={stereoWidth} setStereoWidth={setStereoWidth}
+        stereoWidth={stereoWidth} setStereoWidth={wrappedSetStereoWidth}
+        // Presets
+        presets={soundPresets}
+        selectedPresetName={selectedPresetName}
+        onPresetChange={applyPreset} // This is applyPreset from GuitarChordApp
 			/>
 		  </Modal>
 		)}

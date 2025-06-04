@@ -1,5 +1,7 @@
 import React from 'react';
-import InstrumentSelector from './components/InstrumentSelector'; // Import InstrumentSelector
+import React, { useState } from 'react'; // Added useState for local state if needed, but not for this change
+import InstrumentSelector from './components/InstrumentSelector';
+import { Preset } from '../soundPresets'; // Assuming Preset interface is exported from soundPresets.ts
 
 // Utility functions for logarithmic scaling
 const logScale = (position: number, min: number, max: number) => {
@@ -69,6 +71,10 @@ interface SoundControlsProps {
   // Stereo Widener settings
   stereoWidth: number;
   setStereoWidth: React.Dispatch<React.SetStateAction<number>>;
+  // Presets
+  presets: Preset[]; // Array of preset objects
+  selectedPresetName: string;
+  onPresetChange: (presetName: string) => void; // Callback to apply preset
 }
 
 const SoundControls: React.FC<SoundControlsProps> = ({
@@ -114,6 +120,10 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   filterType, setFilterType,
   // Stereo Widener
   stereoWidth, setStereoWidth,
+  // Presets
+  presets,
+  selectedPresetName,
+  onPresetChange,
 }) => {
   // Basic inline styles to replace Tailwind classes
   const containerStyle: React.CSSProperties = {
@@ -185,6 +195,25 @@ const SoundControls: React.FC<SoundControlsProps> = ({
   return (
     <div style={containerStyle}>
       <h3 style={headingStyle}>Sound Customization</h3>
+
+      <div style={controlGroupStyle}>
+        <label htmlFor="preset-selector" style={labelStyle}>Sound Preset:</label>
+        <select
+          id="preset-selector"
+          value={selectedPresetName}
+          onChange={(e) => onPresetChange(e.target.value)}
+          style={selectStyle}
+        >
+          <option value="">
+            {selectedPresetName === "" ? "Select a Preset..." : "-- Custom Settings --"}
+          </option>
+          {presets.map((preset) => (
+            <option key={preset.name} value={preset.name}>
+              {preset.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <InstrumentSelector
         selectedInstrument={selectedInstrument}
