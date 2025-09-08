@@ -12,7 +12,7 @@ interface SequenceEditorProps {
 }
 
 const SequenceEditor: React.FC<SequenceEditorProps> = ({ chordSequence, setChordSequence, setSequenceValidity }) => {
-  const [cursorPosition, setCursorPosition] = useState<number>(0);
+  // const [cursorPosition, setCursorPosition] = useState<number>(0); // Removed
   const [selectedKey, setSelectedKey] = useState<string>('C Major');
   const [selectedProgression, setSelectedProgression] = useState<string>('');
   const [selectedSong, setSelectedSong] = useState<string>('');
@@ -47,18 +47,17 @@ const validateSequence = (sequence: string): boolean => {
 	  updateSequence(event.target.value);
   };
 
-
-  const handleCursorChange = () => {
-    if (textAreaRef.current) {
-      setCursorPosition(textAreaRef.current.selectionStart);
-    }
-  };
+	// const handleCursorChange = () => { // Removed
+	//   if (textAreaRef.current) {
+	//     setCursorPosition(textAreaRef.current.selectionStart);
+	//   }
+	// };
 
 	const updateTextAreaContent = (newContent: string) => {
 	  console.log("Updating text area content:", newContent);
 	  updateSequence(newContent);
 	  const newPosition = newContent.length;
-	  setCursorPosition(newPosition);
+	  // setCursorPosition(newPosition); // Removed
 	  if (textAreaRef.current) {
 		textAreaRef.current.focus();
 		textAreaRef.current.setSelectionRange(newPosition, newPosition);
@@ -128,8 +127,8 @@ const validateSequence = (sequence: string): boolean => {
         ref={textAreaRef}
         value={localChordSequence}
         onChange={handleTextChange}
-        onKeyUp={handleCursorChange}
-        onClick={handleCursorChange}
+        // onKeyUp={handleCursorChange} // Removed
+        // onClick={handleCursorChange} // Removed
         style={{ width: '100%', height: '100px', marginBottom: '20px' }}
       />
       <div style={{ marginBottom: '20px' }}>
